@@ -1,10 +1,10 @@
 # Multi-Sensor Platform for Monitoring Cryoprotective Agents (CPAs)
 
-**Course:** ECE Senior Design (EE 4951W) at University of Minnesota
+
 
 **Project Advisor:** Professor Rhonda Franklin
 
-**Students:**
+** V1 Design Students:**
 * Aditya Prabhu
 * Brett Duncan
 * Jack Sellner
