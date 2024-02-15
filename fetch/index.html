@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+        <link rel="stylesheet" href="index.css">
+        <script src="plotly-2.19.1.min.js"></script>
+        <script src="index.js"></script>
+        <title>CryoInterface</title>
+    </head>
+    <body>
+        <div id="new_experiment" class="tabcontent tabstyle">
+            <div style="width: 100%; display: flex; justify-content: center;">
+                <form id="create_experiment">
+                    <div style="width: 100%; text-align: center;">
+                        <h1>Create Experiment</h1>
+                    </div>
+                    <div style="border-radius: 25px; border-color: #4CAF50; border-width: 3px; padding: 20px; width: 100%; border-style: solid;">
+                        <h2 style="text-align: center;">Experiment Metadata</h2>
+                        <p>
+                            <label for="title"><b>Experiment Title:</b></label>
+                            <input id="title" name="title" type="text" required>
+                        </p>
+                        <p>
+                            <label for="name"><b>User:</b></label>
+                            <input id="name" name="name" type="text" required>
+                        </p>
+                        <p>
+                            <label for="cpa"><b>CPA:</b></label>
+                            <input type="text" id="cpa" name="cpa" required>
+                        </p>
+                        <p>
+                            <label for="date"><b>Date:</b></label>
+                            <input type="date" id="date" name="date" style="padding: 1em;" required>
+                        </p>
+                    </div>
+                    <br>
+                    <div style="border-radius: 25px; border-color: #4CAF50; border-width: 3px; padding: 20px; width: 100%; border-style: solid;">
+                        <h2 style="text-align: center;">Temperature Sensors</h2>
+                        <p>
+                            <b>Instructions:</b>
+                            <ul>
+                                <li>Check the box to select sensor(s) for this experiment.</li>
+                                <li>Once selected, use the text box to name the sensor. (ex: "top", "bottom")</li>
+                            </ul>
+                        </p>
+                        <p>
+                            <label for="temp1"><b>Sensor 1:</b></label>
+                            <input type="checkbox" id="temp1Checkbox" title="Select to enable Temperature Sensor 1 for this experiment." />
+                            <input type="text" name="temp1" id="temp1" title="Name Temperature Sensor 1 for this experiment." disabled />
+                        </p>
+                        <p>
+                            <label for="temp2"><b>Sensor 2:</b></label>
+                            <input type="checkbox" id="temp2Checkbox" />
+                            <input type="text" name="temp2" id="temp2" disabled />
+                        </p>
+                        <p>Both temperature sensors connect to the microcontroller in the enclosure.</p>
+                        <p>The microcontroller connects to the computer using a single USB connection.</p>
+                    </div>
+                    <br>
+                    <div style="border-radius: 25px; border-color: #4CAF50; border-width: 3px; padding: 20px; width: 100%; border-style: solid;">
+                        <h2 style="text-align: center;">VNAs</h2>
+                        <p>
+                            <b>Instructions:</b>
+                            <ul>
+                                <li>Check the box to select VNA(s) for this experiment.</li>
+                                <li>Once selected, use the text box to name the VNA. (ex: "top", "bottom")</li>
+                            </ul>
+                        </p>
+                        <p>
+                            <b>Compatible VNAs:</b>
+                            <ul>
+                                <li>N9914A (6.5GHz)</li>
+                                <li>N9913A (4GHz)</li>
+                            </ul>
+                        </p>
+                        <p>
+                            <label for="vna1"><b>VNA 1:</b></label>
+                            <input type="checkbox" id="vna1Checkbox" />
+                            <input type="text" name="vna1" id="vna1" disabled />
+                            <select name="vna1_temp" id="vna1_temp" style="display: none;">
+                                <option value="" selected></option>
+                                <option id="vna1opt1" value="temp1" style="display: none;">Temp Sensor 1</option>
+                                <option id="vna1opt2" value="temp2" style="display: none;">Temp Sensor 2</option>
+                            </select>
+                        </p>
+                        <p>
+                            <label for="vna2"><b>VNA 2:</b></label>
+                            <input type="checkbox" id="vna2Checkbox"/>
+                            <input type="text" name="vna2" id="vna2" disabled />
+                            <select name="vna2_temp" id="vna2_temp" style="display: none;">
+                                <option value="" selected></option>
+                                <option id="vna2opt1" value="temp1" style="display: none;">Temp Sensor 1</option>
+                                <option id="vna2opt2" value="temp2" style="display: none;">Temp Sensor 2</option>
+                            </select>
+                        </p>
+                    </div>
+                    <div style="padding: 20px; width: 100%; display: flex; align-items: center; justify-content: center;">
+                        <input type="submit" value="Create Experiment" class="button">
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div id="dashboard" class="tabcontent">
+            <div style="border-radius: 25px; border-color: #008CBA; border-width: 3px; padding: 20px; width: 60%; border-style: solid;">
+                <h2>Experiment Setup Metadata</h2>
+                <b>Title: </b><span id="metadata-title"></span>
+                <br>
+                <b>Name: </b><span id="metadata-name"></span>
+                <br>
+                <b>CPA: </b><span id="metadata-cpa"></span>
+                <br>
+                <b>Date: </b><span id="metadata-date"></span>
+                <br>
+                <b>Temperature 1: </b><span id="metadata-temp1"></span>
+                <br>
+                <b>Temperature 2: </b><span id="metadata-temp2"></span>
+                <br>
+                <b>VNA 1: </b><span id="metadata-vna1"></span>
+                <br>
+                <b>VNA 2: </b><span id="metadata-vna2"></span>
+                <br>
+                <b>VNA1 Temperature: </b><span id="metadata-vna1_temp"></span>
+                <br>
+                <b>VNA2 Temperature: </b><span id="metadata-vna2_temp"></span>
+            </div>
+            <br>
+            <div style="border-radius: 25px; border-color: #008CBA; border-width: 3px; padding: 20px; width: 60%; border-style: solid;">
+                <div>
+                    <h2>Connect Devices</h2>
+                    <h3>Temperature Sensor</h3>
+                    <select name="port" id="port"></select>
+                    <button id="refresh" class="button">Refresh</button>
+                    <button id="connect" class="button">Connect</button>
+                    <span id="tempStatus" style="padding: 5px; border: 2px solid red;">Not Connected</span>
+                    <p>Select the USB port to connect to using the dropdown menu.</p>
+                    <p>To refresh the list of available ports, click "Refresh".</p>
+                    <p>To connect to the device at the selected port, click "Connect".</p>
+                    <p>Once the device is connected, real-time temperature will be displayed on the graph below.</p>
+                </div>
+                <div>
+                    <h3>VNA</h3>
+                    <label><b>VNA 1 IP:</b></label>
+                    <input type="text" id="vna1IP" name="vna1IP">
+                    <button id="connectVNA1" class="button">Connect</button>
+                    <span id="vna1status" style="padding: 5px; border: 2px solid red;">Not Connected</span>
+                    <br>
+                    <label><b>VNA 2 IP:</b></label>
+                    <input type="text" id="vna2IP" name="vna2IP">
+                    <button id="connectVNA2" class="button">Connect</button>
+                    <span id="vna2status" style="padding: 5px; border: 2px solid red;">Not Connected</span>
+                    <p>Supply the IP address of the VNA you want to connect to.</p>
+                    <p>To connect to the VNA at that IP address, click "Connect".</p>
+                </div>
+            </div>
+            <br>
+            <div style="border-radius: 25px; border-color: #008CBA; border-width: 3px; padding: 20px; width: 60%; border-style: solid;">
+                <h2>Configure Data Collection</h2>
+                <label for="datarate"><b>Sampling Period:</b></label>
+                <input type="number" id="mins" name="mins" min="0" max="60"> min
+                <input type="number" id="datarate" name="datarate" min="0" max="59"> sec
+                <button id="cfgRate" class="button">Update Config</button>
+                <br>
+                <p>The sampling period is how often data is collected.</p>
+                <p>To update the sampling period, change the minutes and/or seconds and then click "Update Config".</p>
+                <p><strong>Warning: Setting a low period may result in unnecessarily large amounts of data. It is not recommended to set the sampling period to less than one minute.</strong></p>
+            </div>
+            <br>
+            <div style="border-radius: 25px; border-color: #008CBA; border-width: 3px; padding: 20px; width: 60%; border-style: solid;">
+                <h2 style="display: inline-block;">Collect Data</h2>     <span id="dataStatus" style="padding: 5px; border: 2px solid red;">Stopped</span>
+                <br>
+                <button id="startup" class="button">Start Logging</button>
+                <button id="stop" class="button">Stop Logging</button>
+                <p>Click "Start Logging" to save temperature data to the temperatures.csv file and begin logging data from the VNAs.</p>
+                <div id="temp_plot"></div>
+            </div>
+            <br>
+            <div style="border-radius: 25px; border-color: #008CBA; border-width: 3px; padding: 20px; width: 60%; border-style: solid;">
+                <h2 style="display: inline-block;">Shutting Down</h2>
+                <p>To close the program and end the experiment, return to the terminal window and kill the python process with "Ctrl+C".</p>
+                <p><strong>Note: It is recommended to first "Stop Logging" before stopping the server.</strong></p>
+            </div>
+            <br>
+            <div>
+                Version 1.0 | Last Updated May 2023 | Duncan, Lundell, Prabhu, Sellner
+            </div>
+        </div>
+    </body>
+</html>
