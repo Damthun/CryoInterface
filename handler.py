@@ -3,7 +3,7 @@ from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler
 import json
 import logging
-import os
+import os, sys
 import socket
 from typing import Dict
 from urllib.parse import urlparse
@@ -13,11 +13,20 @@ import serial
 from app_thread import AppThread
 from metadata import Metadata
 from utils import EnhancedJSONEncoder, find_available_devices, find_previous_experiments
-from vna import build_cmd, VNA_PORT
+from vna import VNA_PORT, build_cmd, send_cmd
 
 
 USB_BAUD_RATE = 9600
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
 
 def build_response_handler(app_thread: AppThread):
     """
@@ -43,24 +52,24 @@ def build_response_handler(app_thread: AppThread):
 
             # Serve this request depending on the requested path.
             if parsed.path in ['/', '/index', '/index.html']:
-                self.send_file_response('fetch/index.html')
+                self.send_file_response(resource_path('fetch/index.html'))
             elif parsed.path == '/index.js':
                 self.send_file_response('fetch/index.js', 'application/javascript')
             elif parsed.path == '/index.css':
-                self.send_file_response('fetch/index.css', 'text/css')
+                self.send_file_response(resource_path('fetch/index.css'), 'text/css')
             elif parsed.path == '/plotly-2.19.1.min.js':
-                self.send_file_response('fetch/plotly-2.19.1.min.js', content_type='application/javascript')
+                self.send_file_response(resource_path('fetch/plotly-2.19.1.min.js'), content_type='application/javascript')
             elif parsed.path == '/favicon-16x16.png':
                 self.send_response(HTTPStatus.OK)
                 self.send_header('Content-Type', 'image/png')
                 self.end_headers()
-                with open('fetch/favicon-16x16.png', 'rb') as f:
+                with open(resource_path('fetch/favicon-16x16.png'), 'rb') as f:
                     self.wfile.write(f.read())
             elif parsed.path == '/favicon-32x32.png':
                 self.send_response(HTTPStatus.OK)
                 self.send_header('Content-Type', 'image/png')
                 self.end_headers()
-                with open('fetch/favicon-32x32.png', 'rb') as f:
+                with open(resource_path('fetch/favicon-32x32.png'), 'rb') as f:
                     self.wfile.write(f.read())
             elif parsed.path == '/api/metadata':
                 self.send_response(HTTPStatus.OK)
@@ -106,10 +115,6 @@ def build_response_handler(app_thread: AppThread):
             # Serve this request depending on the requested path.
             if parsed.path == '/api/config':
                 self.update_config()
-            elif parsed.path == '/api/generate_combined_csv':
-                # TODO: implement this last (once we have some data to work with)
-                self.send_response_only(HTTPStatus.NOT_IMPLEMENTED)
-                self.end_headers()
             elif parsed.path == '/api/start':
                 self.start()
             elif parsed.path == '/api/stop':
@@ -321,9 +326,15 @@ def build_response_handler(app_thread: AppThread):
                 # Connect to that socket.
                 app_thread.vna_con1.connect((host, VNA_PORT))
                 # Send the identify command to the VNA.
-                app_thread.vna_con1.send(build_cmd('*IDN?'))
+                app_thread.vna_con1.send(build_cmd('*IDN?\n'))
                 # Read the VNA's reply.
-                recv = app_thread.vna_con1.recv(2048)
+                recv = app_thread.vna_con1.recv(255)
+                idn_response = recv.decode('utf-8')
+
+                vna1_identity = idn_response.split(',')
+                app_thread.vna_type1 = vna1_identity[1]
+                print(vna1_identity)
+                print(app_thread.vna_type1)
                 logging.info(f"Connected to {recv.decode('utf-8')}")
             except:
                 # Set the connection to None.
@@ -375,9 +386,14 @@ def build_response_handler(app_thread: AppThread):
                 # Connect to that socket.
                 app_thread.vna_con2.connect((host, VNA_PORT))
                 # Send the identify command to the VNA.
-                app_thread.vna_con2.send(build_cmd('*IDN?'))
+                app_thread.vna_con2.send(build_cmd('*IDN?\n'))
                 # Read the VNA's reply.
-                recv = app_thread.vna_con2.recv(2048)
+                recv = app_thread.vna_con2.recv(255)
+                idn_response = recv.decode('utf-8')
+                vna2_identity = idn_response.split(',')
+                app_thread.vna_type2 = vna2_identity[1]
+                print(vna2_identity)
+                print(app_thread.vna_type2)
                 logging.info(f"Connected to {recv.decode('utf-8')}")
             except:
                 # Set the connection to None.
@@ -405,7 +421,6 @@ def build_response_handler(app_thread: AppThread):
                 return
 
             # Determine content length, read the data, decode it, and load it as JSON.
-            # TODO: add better error handling here.
             try:
                 length = int(self.headers.get('length'))
             except TypeError:
@@ -463,10 +478,19 @@ def build_response_handler(app_thread: AppThread):
             vna1 = metadata.get('vna1')
             if vna1 == '':
                 vna1 = 'vna1'
-            
+
+            vna1_type = metadata.get('vna1_type')
+            if vna1_type == '':
+                vna1_type = 'vna1_type'
+
+
             vna2 = metadata.get('vna2')
             if vna2 == '':
                 vna2 = 'vna2'
+
+            vna2_type = metadata.get('vna2_type')
+            if vna2_type == '':
+                vna2_type = 'vna2_type'
 
             vna1_temp = metadata.get('vna1_temp')
             # Check that the associated temperature selection was actually selected.
@@ -492,6 +516,8 @@ def build_response_handler(app_thread: AppThread):
                                            temp2=temp2,
                                            vna1=vna1,
                                            vna2=vna2,
+                                           vna1_type=vna1_type,
+                                           vna2_type=vna2_type,
                                            vna1_temp=vna1_temp,
                                            vna2_temp=vna2_temp)
             app_thread.dir = directory
