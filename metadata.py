@@ -19,5 +19,7 @@ class Metadata:
     temp2: Optional[str]
     vna1: Optional[str]
     vna2: Optional[str]
+    vna1_type: Optional[str]
+    vna2_type: Optional[str]
     vna1_temp: Optional[str]
     vna2_temp: Optional[str]
