@@ -43,7 +43,7 @@
                                 <li>Check the box to select sensor(s) for this experiment.</li>
                                 <li>Once selected, use the text box to name the sensor. (ex: "top", "bottom")</li>
                             </ul>
-                        </p>
+
                         <p>
                             <label for="temp1"><b>Sensor 1:</b></label>
                             <input type="checkbox" id="temp1Checkbox" title="Select to enable Temperature Sensor 1 for this experiment." />
@@ -66,32 +66,49 @@
                                 <li>Check the box to select VNA(s) for this experiment.</li>
                                 <li>Once selected, use the text box to name the VNA. (ex: "top", "bottom")</li>
                             </ul>
-                        </p>
-                        <p>
+
                             <b>Compatible VNAs:</b>
                             <ul>
-                                <li>N9914A (6.5GHz)</li>
-                                <li>N9913A (4GHz)</li>
+                                <li>FieldFox N9914A (6.5GHz)</li>
+                                <li>FieldFox N9913A (4GHz)</li>
+                                <li>Agilent ENA 5061B</li>
                             </ul>
-                        </p>
                         <p>
                             <label for="vna1"><b>VNA 1:</b></label>
                             <input type="checkbox" id="vna1Checkbox" />
                             <input type="text" name="vna1" id="vna1" disabled />
+                            <label for="vna1_type"><b>VNA Type:</b></label>
+                            <select name="vna1_type" id="vna1_type" disabled >
+                                <option value="N/A" selected>N/A</option>
+                                <option value="FieldFox VNA">FieldFox</option>
+                                <option value="ENA" >Agilent ENA</option>
+                            </select>
+                        </p>
+                        <p>
+                            <label for="vna1_temp" id="vna1_probe" style="display: none;"><b>Associated temp:</b></label>
                             <select name="vna1_temp" id="vna1_temp" style="display: none;">
                                 <option value="" selected></option>
-                                <option id="vna1opt1" value="temp1" style="display: none;">Temp Sensor 1</option>
-                                <option id="vna1opt2" value="temp2" style="display: none;">Temp Sensor 2</option>
+                                <option value="N/A">N/A</option>
+                                <option id="vna1opt1" value="Temp Sensor 1" style="display: none;">Temp Sensor 1</option>
+                                <option id="vna1opt2" value="Temp Sensor 2" style="display: none;">Temp Sensor 2</option>
                             </select>
                         </p>
                         <p>
                             <label for="vna2"><b>VNA 2:</b></label>
                             <input type="checkbox" id="vna2Checkbox"/>
                             <input type="text" name="vna2" id="vna2" disabled />
+                            <label for="vna2_type"><b>VNA Type:</b></label>
+                            <select name="vna2_type" id="vna2_type" disabled >
+                                <option value="" selected>N/A</option>
+                                <option value="FieldFox VNA">FieldFox</option>
+                                <option value="ENA" >Agilent ENA</option>
+                            </select>
+                            <label for="vna2_temp" id="vna2_probe" style="display: none;"><b>Associated temp:</b></label>
                             <select name="vna2_temp" id="vna2_temp" style="display: none;">
                                 <option value="" selected></option>
-                                <option id="vna2opt1" value="temp1" style="display: none;">Temp Sensor 1</option>
-                                <option id="vna2opt2" value="temp2" style="display: none;">Temp Sensor 2</option>
+                                <option value="N/A">N/A</option>
+                                <option id="vna2opt1" value="Temp Sensor 1" style="display: none;">Temp Sensor 1</option>
+                                <option id="vna2opt2" value="Temp Sensor 2" style="display: none;">Temp Sensor 2</option>
                             </select>
                         </p>
                     </div>
@@ -118,11 +135,15 @@
                 <br>
                 <b>VNA 1: </b><span id="metadata-vna1"></span>
                 <br>
-                <b>VNA 2: </b><span id="metadata-vna2"></span>
+                <b>Vna 2: </b><span id="metadata-vna2"></span>
                 <br>
-                <b>VNA1 Temperature: </b><span id="metadata-vna1_temp"></span>
+                <b>Vna 1 Type: </b><span id="metadata-vna1_type"></span>
                 <br>
-                <b>VNA2 Temperature: </b><span id="metadata-vna2_temp"></span>
+                <b>Vna 2 Type: </b><span id="metadata-vna2_type"></span>
+                <br>
+                <b>Vna1 Associated Probe: </b><span id="metadata-vna1_temp"></span>
+                <br>
+                <b>Vna2 Associated Probe: </b><span id="metadata-vna2_temp"></span>
             </div>
             <br>
             <div style="border-radius: 25px; border-color: #008CBA; border-width: 3px; padding: 20px; width: 60%; border-style: solid;">
