@@ -15,7 +15,6 @@ import serial
 
 from config import Config
 from metadata import Metadata
-# from vna import build_cmd
 from vna_funcs import ping_vna, vna_csv, vna_s2p
 
 
@@ -25,6 +24,7 @@ class AppThread(Thread):
     """
 
     def __init__(self):
+        print('Application Started! Visit "Localhost:4951" via your browser to use the Interface.')
         super().__init__()
 
         # Application metadata.
@@ -36,7 +36,7 @@ class AppThread(Thread):
         # Whether an experiment has been selected.
         self.experiment_selected = False
 
-        # Whether or not the experiment is running.
+        #  Regardless of whether the experiment is running.
         self.running = False
 
         # Serial connection to microcontroller.
@@ -46,6 +46,9 @@ class AppThread(Thread):
         self.vna_con1: Optional[socket.socket] = None
         self.vna_con2: Optional[socket.socket] = None
 
+        # Variables to store VNA type, Will Help with SCPI
+        self.vna_type1: Optional[str] = None
+        self.vna_type2: Optional[str] = None
         # Temperature data collected by the experiment.
         self.data = []
 
@@ -55,7 +58,7 @@ class AppThread(Thread):
         # Directory to store data in.
         self.dir: Optional[str] = None
 
-        # Wether or not the application has been killed.
+        # Regardless of whether the application has been killed.
         self.killed = False
 
     def run(self):
@@ -69,14 +72,12 @@ class AppThread(Thread):
 
             # If the experiment is running.
             if self.running:
-                path = os.path.join('experiments', self.dir, 'temperatures.csv')
-                # Open the file for saving temperature data.
-                with open(path, 'w+', encoding='utf-8') as wf:
-                    # We loop here so check again if the experiment is running and the
-                    # application is alive.
-                    while self.running and not self.killed:
-
-                        # Whether we need to try again at taking data due to an error.
+                if self.metadata.temp1 or self.metadata.temp2:
+                    path = os.path.join('experiments', self.dir, 'temperatures.csv')
+                    # Open the file for saving temperature data.
+                    with open(path, 'w+', encoding='utf-8') as wf:
+                        # We loop here so check again if the experiment is running and
+                        # whether we need to try again at taking data due to an error.
                         retry = False
 
                         # Get the current time.
@@ -86,7 +87,7 @@ class AppThread(Thread):
                         if self.con:
                             try:
                                 temp1, temp2 = self._read_temp_data()
-                                
+
                                 data = {
                                     'time': t,
                                     'temp1': temp1,
@@ -116,69 +117,78 @@ class AppThread(Thread):
                                 self.con = None
                             except:
                                 logging.exception('Exception encountered in app thread.')
+                else:
+                    retry = False
+                    t = time.time()
+                    last_reading = t
+                while self.running and not self.killed:
+                    # If we are connected to VNA 1.
 
-                        # If we are connected to VNA 1.
-                        if self.vna_con1:
-                            print('VNA1')
-                            try:
-                                dt = datetime.fromtimestamp(t)
-                                name = f'{dt.year}_{dt.month:02d}_{dt.day:02d}_{dt.hour:02d}_{dt.minute:02d}_{dt.second:02d}'
-                                
-                                f_name = f'{name}_vna1.csv'
-                                fpath = os.path.join('experiments', self.dir, f_name)
-                                result = vna_csv(self.vna_con1, fpath)
-                                if not result:
-                                    retry = True
-                                    continue
-                                
-                                f_name = f'{name}_vna1.s2p'
-                                fpath = os.path.join('experiments', self.dir, f_name)
-                                result = vna_s2p(self.vna_con1, 201, fpath)
-                                if not result:
-                                    retry = True
-                                    continue
-                            except:
-                                logging.exception('Error.')
-                                try:
-                                    self.vna_con1.close()
-                                except:
-                                    logging.exception('Error closing connection.')
-                                self.vna_con1 = None
+                    if self.vna_con1:
 
-                        # If we are connected to VNA 2.
-                        if self.vna_con2:
-                            print('VNA2')
+                        print('VNA1')
+                        try:
+                            dt = datetime.fromtimestamp(t)
+
+                            name = f'{dt.year:02d}_{dt.month:02d}_{dt.day:02d}_{dt.hour:02d}_{dt.minute:02d}_{dt.second:02d}'
+
+                            f_name = f'{name}_vna1.csv'
+                            fpath = os.path.join('experiments', self.dir, f_name)
+
+                            result = vna_csv(self.vna_con1, fpath, self.vna_type1)
+                            if not result:
+                                retry = True
+                                continue
+
+                            f_name = f'{name}_vna1.s2p'
+                            fpath = os.path.join('experiments', self.dir, f_name)
+                            result = vna_s2p(self.vna_con1, fpath, self.vna_type1)
+                            if not result:
+                                retry = True
+                                continue
+
+                        except:
+                            logging.exception('Error.')
                             try:
-                                dt = datetime.fromtimestamp(t)
-                                name = f'{dt.year}_{dt.month:02d}_{dt.day:02d}_{dt.hour:02d}_{dt.minute:02d}_{dt.second:02d}'
-                                
-                                f_name = f'{name}_vna2.csv'
-                                fpath = os.path.join('experiments', self.dir, f_name)
-                                result = vna_csv(self.vna_con2, fpath)
-                                if not result:
-                                    retry = True
-                                    continue
-                                
-                                f_name = f'{name}_vna2.s2p'
-                                fpath = os.path.join('experiments', self.dir, f_name)
-                                result = vna_s2p(self.vna_con2, 201, fpath)
-                                if not result:
-                                    retry = True
-                                    continue
+                                self.vna_con1.close()
                             except:
-                                logging.exception('Error.')
-                                try:
-                                    self.vna_con2.close()
-                                except:
-                                    logging.exception('Error closing connection.')
-                                self.vna_con2 = None
-                        
-                        if not retry:
-                            # Sleep until it's time to collect the next data point.
-                            start_time = t
-                            while self.running and not self.killed and time.time() < start_time + self.config.period:
-                                t = time.time()
-                                if self.con and t >= last_reading + 15:
+                                logging.exception('Error closing connection.')
+                            self.vna_con1 = None
+
+                    # If we are connected to VNA 2.
+                    if self.vna_con2:
+                        print('VNA2')
+                        try:
+                            dt = datetime.fromtimestamp(t)
+                            name = f'{dt.year}_{dt.month:02d}_{dt.day:02d}_{dt.hour:02d}_{dt.minute:02d}_{dt.second:02d}'
+
+                            f_name = f'{name}_vna2.csv'
+                            fpath = os.path.join('experiments', self.dir, f_name)
+                            result = vna_csv(self.vna_con2, fpath, self.vna_type2)
+                            if not result:
+                                retry = True
+                                continue
+
+                            f_name = f'{name}_vna2.s2p'
+                            fpath = os.path.join('experiments', self.dir, f_name)
+                            result = vna_s2p(self.vna_con2,fpath,self.vna_type2)
+                            if not result:
+                                retry = True
+                                continue
+                        except:
+                            logging.exception('Error.')
+                            try:
+                                self.vna_con2.close()
+                            except:
+                                logging.exception('Error closing connection.')
+                            self.vna_con2 = None
+
+                    if not retry:
+                        # Sleep until it's time to collect the next data point.
+                        start_time = t
+                        while self.running and not self.killed and time.time() < start_time + self.config.period:
+                            t = time.time()
+                            if self.con and t >= last_reading + 15:
 
                                     try:
                                         temp1, temp2 = self._read_temp_data()
@@ -194,7 +204,7 @@ class AppThread(Thread):
                                         # Send data to every queue in the pool.
                                         for q in self.queue_pool:
                                             q.put(data)
-                                    
+
                                     except serial.serialutil.SerialException:
                                         msg = 'Encountered an error while communicating with the ESP32.' \
                                             'Closing connection.'
@@ -216,11 +226,11 @@ class AppThread(Thread):
                                         # Ping VNA 2 to see if it's still connected.
                                         if not ping_vna(self.vna_con2):
                                             self.vna_con2 = None
-                                    
+
                                     last_reading = t
-                                    
+
                                 # Sleep to avoid wasting CPU resources.
-                                time.sleep(0.001)
+                            time.sleep(0.001)
 
             while not self.running and not self.killed:
                 t = time.time()
