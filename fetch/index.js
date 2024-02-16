@@ -145,6 +145,8 @@ function loadMetadata() {
         document.getElementById("metadata-temp2").textContent = data.temp2 === null ? "[Not Selected]" : data.temp2;
         document.getElementById("metadata-vna1").textContent = data.vna1 === null ? "[Not Selected]" : data.vna1;
         document.getElementById("metadata-vna2").textContent = data.vna2 === null ? "[Not Selected]" : data.vna2;
+        document.getElementById("metadata-vna1_type").textContent = data.vna1_type === null ? "[Not Selected]" : data.vna1_type;
+        document.getElementById("metadata-vna2_type").textContent = data.vna2_type === null ? "[Not Selected]" : data.vna2_type;
         document.getElementById("metadata-vna1_temp").textContent = data.vna1_temp === null ? "[Not Selected]" : data.vna1_temp;
         document.getElementById("metadata-vna2_temp").textContent = data.vna2_temp === null ? "[Not Selected]" : data.vna2_temp;
     })
@@ -217,7 +219,6 @@ function ExpFrmHandler(event) {
     if (jsonObj.vna2_temp === "") {
         jsonObj.vna2_temp = null;
     }
-
     console.log(jsonObj);
     const jsonData = JSON.stringify(jsonObj);
 
@@ -237,36 +238,6 @@ function ExpFrmHandler(event) {
             console.log("Failed to create experiment");
         });
 }
-
-// function vna1IPEventHandler(event) {
-//     event.preventDefault();
-//     // capture the form data
-//     const formData = new FormData(event.target);
-//     console.log(formData.entries());
-//     // convert the form data to JSON format
-//     const jsonObj = Object.fromEntries(formData.entries());
-//     const jsonData = JSON.stringify(jsonObj);
-
-//     fetch('/api/connect_vna1', {
-//             headers: {
-//                 'Accept': 'application/json',
-//                 'Content-Type': 'application/json',
-//                 "length": jsonData.length.toString()
-//             },
-//             method: "POST",
-//             body: jsonData
-//         })
-//         .then(res => {
-//             if (res.status == 200) {
-//                 alert("Connection successful.");
-//             } else {
-//                 console.log("Failed to connect to VNA.");
-//             }
-//         })
-//         .catch(err => { 
-//             console.log("Failed to connect to VNA.");
-//         });
-// }
 
 function displayData() {
     var evtSource = new EventSource("api/stream_data");
@@ -447,15 +418,20 @@ function init() {
         var v1box = document.getElementById('vna1');
         v1box.disabled = !this.checked;
         var v1select = document.getElementById("vna1_temp");
+        var vna1type = document.getElementById("vna1_type");
+        vna1type.disabled = !this.checked
+        var vna1probe = document.getElementById("vna1_probe");
         if(v1box.disabled){
             v1select.style.display = "none";
+            vna1probe.style.display = "none";
             if(v1select.hasAttribute("required")){
                 v1select.removeAttribute("required");
             }
         }
         else{
             v1select.setAttribute("required", true);
-            v1select.style.display = "block";
+            v1select.style.display = "flex";
+            vna1probe.style.display = "flex";
         }
     };
 
@@ -463,15 +439,20 @@ function init() {
         var v2box = document.getElementById('vna2')
         v2box.disabled = !this.checked;
         var v2select = document.getElementById("vna2_temp");
+        var vna2type = document.getElementById("vna2_type");
+        vna2type.disabled = !this.checked
+        var vna2probe = document.getElementById("vna2_probe");
         if(v2box.disabled){
             v2select.style.display = "none";
+            vna2probe.style.display = "none";
             if(v2select.hasAttribute("required")){
                 v2select.removeAttribute("required");
             }
         }
         else{
             v2select.setAttribute("required", true);
-            v2select.style.display = "block";
+            v2select.style.display = "flex";
+            vna2probe.style.display = "flex";
         }
     };
 
