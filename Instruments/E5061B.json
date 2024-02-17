@@ -1,0 +1,7 @@
+{
+    "Model": "E5061B",
+    "Termination": "\n",
+    "Save_csv": "MMEM:STOR:FDAT",
+    "Save_snp": "MMEM:STOR:SNP",
+    "Grab_file": "MMEM:TRAN"
+}

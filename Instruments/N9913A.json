@@ -1,0 +1,7 @@
+{
+    "Model": "N9913A",
+    "Termination": "\n",
+    "Save_csv": "MMEM:STOR:FDAT",
+    "Save_snp": "MMEM:STOR:SNP",
+    "Grab_file": "MMEM:DATA"
+}

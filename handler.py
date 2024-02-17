@@ -7,7 +7,6 @@ import os, sys
 import socket
 from typing import Dict
 from urllib.parse import urlparse
-
 import serial
 
 from app_thread import AppThread
@@ -15,11 +14,14 @@ from metadata import Metadata
 from utils import EnhancedJSONEncoder, find_available_devices, find_previous_experiments
 from vna import VNA_PORT, build_cmd, send_cmd
 
-
 USB_BAUD_RATE = 9600
 
+
 def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
+    """ This function is here to allow the program to be packaged as an executable.
+    Pyinstaller recreates files in a temporary directory so paths cant be explicit,
+    instead we get absolute path to resources/files.
+    """
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
         base_path = sys._MEIPASS
@@ -54,7 +56,7 @@ def build_response_handler(app_thread: AppThread):
             if parsed.path in ['/', '/index', '/index.html']:
                 self.send_file_response(resource_path('fetch/index.html'))
             elif parsed.path == '/index.js':
-                self.send_file_response('fetch/index.js', 'application/javascript')
+                self.send_file_response(resource_path('fetch/index.js'), 'application/javascript')
             elif parsed.path == '/index.css':
                 self.send_file_response(resource_path('fetch/index.css'), 'text/css')
             elif parsed.path == '/plotly-2.19.1.min.js':
@@ -101,6 +103,10 @@ def build_response_handler(app_thread: AppThread):
                     'vna2': (app_thread.vna_con2 is not None),
                 }
                 self.send_json_response(data)
+
+            elif parsed.path == '/api/load_instruments':
+                instruments = self.known_instruments()
+                self.send_json_response(instruments)
             else:
                 self.send_response_only(HTTPStatus.NOT_FOUND)
                 self.end_headers()
@@ -118,6 +124,7 @@ def build_response_handler(app_thread: AppThread):
             elif parsed.path == '/api/start':
                 self.start()
             elif parsed.path == '/api/stop':
+                app_thread.data_collection = False
                 app_thread.running = False
                 self.send_json_response('Data collection stopped!', status=HTTPStatus.OK)
             elif parsed.path == '/api/create_experiment':
@@ -128,6 +135,10 @@ def build_response_handler(app_thread: AppThread):
                 self.connect_vna1()
             elif parsed.path == '/api/connect_vna2':
                 self.connect_vna2()
+            elif parsed.path == '/api/kill':
+                self.send_json_response('Experiment Data Collection Ended Successfully', status=HTTPStatus.OK)
+                app_thread.stop()
+
             else:
                 self.send_response_only(HTTPStatus.NOT_FOUND)
                 self.end_headers()
@@ -161,26 +172,27 @@ def build_response_handler(app_thread: AppThread):
             """
             Send a stream of JSON events for the temperature data until the connection is closed.
             """
-            self.send_response(HTTPStatus.OK)
-            self.send_header('Content-type', 'text/event-stream')
-            self.end_headers()
+            while app_thread.data_collection:
+                self.send_response(HTTPStatus.OK)
+                self.send_header('Content-type', 'text/event-stream')
+                self.end_headers()
 
-            # Get a queue from the app thread for the temperature data.
-            queue = app_thread.get_queue()
+                # Get a queue from the app thread for the temperature data.
+                queue = app_thread.get_queue()
 
-            try:
-                # Run until the connection is closed.
-                while True:
-                    # Block until data is available.
-                    data: Dict = queue.get()
-                    # String formatted for event.
-                    s = 'event: temperature\ndata: ' + json.dumps(data) + '\n\n'
-                    # Write to stream.
-                    self.wfile.write(s.encode('utf-8'))
-            except:
-                # An exception occured and the connection is closed, remove the queue from the pool.
-                app_thread.queue_pool.remove(queue)
-                logging.exception('An error occured while serving stream data.')
+                try:
+                    # Run until the connection is closed.
+                    while True:
+                        # Block until data is available.
+                        data: Dict = queue.get()
+                        # String formatted for event.
+                        s = 'event: temperature\ndata: ' + json.dumps(data) + '\n\n'
+                        # Write to stream.
+                        self.wfile.write(s.encode('utf-8'))
+                except:
+                    # An exception occured and the connection is closed, remove the queue from the pool.
+                    app_thread.queue_pool.remove(queue)
+                    logging.exception('An error occured while serving stream data.')
 
         def update_config(self) -> None:
             """
@@ -224,9 +236,11 @@ def build_response_handler(app_thread: AppThread):
         def start(self) -> None:
             """
             Start collecting data if an experiment has been selected.
+            FUNCTION OCCURS WHEN CLICKING START BUTTON
             """
             if app_thread.experiment_selected:
                 app_thread.running = True
+                app_thread.data_collection = True
                 msg = 'Data Collection started!'
                 self.send_json_response(msg, status=HTTPStatus.OK)
             else:
@@ -267,14 +281,14 @@ def build_response_handler(app_thread: AppThread):
             # Find available ports
             available = find_available_devices()
 
-            # Check if the requested  port is one the available ports
+            # Check if the requested port is one of the available ports
             if port not in available:
                 msg = f"The requested port '{port}' is not available."
                 logging.warning(msg)
                 self.send_json_response(msg, status=HTTPStatus.BAD_REQUEST)
                 return
             
-            timeout = 5
+            timeout = 1
 
             try:
                 app_thread.con = serial.Serial(port=port, baudrate=USB_BAUD_RATE, timeout=timeout)
@@ -329,12 +343,13 @@ def build_response_handler(app_thread: AppThread):
                 app_thread.vna_con1.send(build_cmd('*IDN?\n'))
                 # Read the VNA's reply.
                 recv = app_thread.vna_con1.recv(255)
+                # Decode the reply.
                 idn_response = recv.decode('utf-8')
-
+                # VNA IDN response is str(manufacturer, model number, serial number, and firmware number)
                 vna1_identity = idn_response.split(',')
-                app_thread.vna_type1 = vna1_identity[1]
+                # Take the model number of device.
                 print(vna1_identity)
-                print(app_thread.vna_type1)
+
                 logging.info(f"Connected to {recv.decode('utf-8')}")
             except:
                 # Set the connection to None.
@@ -389,11 +404,13 @@ def build_response_handler(app_thread: AppThread):
                 app_thread.vna_con2.send(build_cmd('*IDN?\n'))
                 # Read the VNA's reply.
                 recv = app_thread.vna_con2.recv(255)
+                # Decode the reply.
                 idn_response = recv.decode('utf-8')
+                # VNA IDN response is str(manufacturer, model number, serial number, and firmware number)
                 vna2_identity = idn_response.split(',')
-                app_thread.vna_type2 = vna2_identity[1]
+                # Take the model number of device.
                 print(vna2_identity)
-                print(app_thread.vna_type2)
+
                 logging.info(f"Connected to {recv.decode('utf-8')}")
             except:
                 # Set the connection to None.
@@ -438,8 +455,8 @@ def build_response_handler(app_thread: AppThread):
             except:
                 self.send_json_response('Error parsing JSON contents.', status=HTTPStatus.BAD_REQUEST)
                 return
-            
-            title = metadata.get('title').replace(' ', '_')
+
+            title = metadata.get('experiment_title').replace(' ', '_')
             name = metadata.get('name')
             cpa = metadata.get('cpa')
             date = metadata.get('date')
@@ -483,7 +500,6 @@ def build_response_handler(app_thread: AppThread):
             if vna1_type == '':
                 vna1_type = 'vna1_type'
 
-
             vna2 = metadata.get('vna2')
             if vna2 == '':
                 vna2 = 'vna2'
@@ -508,7 +524,7 @@ def build_response_handler(app_thread: AppThread):
                 self.send_json_response(msg, status=HTTPStatus.BAD_REQUEST)
                 return
 
-            app_thread.metadata = Metadata(title=title,
+            app_thread.metadata = Metadata(experiment_title=title,
                                            name=name,
                                            cpa=cpa,
                                            date=date,
@@ -519,7 +535,8 @@ def build_response_handler(app_thread: AppThread):
                                            vna1_type=vna1_type,
                                            vna2_type=vna2_type,
                                            vna1_temp=vna1_temp,
-                                           vna2_temp=vna2_temp)
+                                           vna2_temp=vna2_temp
+                                           )
             app_thread.dir = directory
             app_thread.experiment_selected = True
 
@@ -531,7 +548,7 @@ def build_response_handler(app_thread: AppThread):
             """
             Save metadata to the metadata.json file in the experiments directory.
 
-            :return: True if the write was sucessful, False otherwise.
+            :return: True if the file write was sucessful, False otherwise.
             """
             try:
                 # Check if a directory has been set. (It is set when the experiment is created.)
@@ -543,4 +560,40 @@ def build_response_handler(app_thread: AppThread):
                 logging.exception('Error occured while writing metadata.')
             return False
 
+        def known_instruments(self):
+            known_devices_dict = {}  # Initialize an empty dictionary
+
+            # Get the path to the "Instruments" folder in the temporary directory
+            instruments_folder_temp = resource_path("Instruments")
+            instruments_folder_cwd = os.path.join(os.getcwd(), "Instruments")
+
+            # Check if the "Instruments" folder exists in the temporary directory
+            if os.path.exists(instruments_folder_temp):
+                for file_name in os.listdir(instruments_folder_temp):
+                    file_path = os.path.join(instruments_folder_temp, file_name)
+                    self.add_instrument_to_dict(file_path, known_devices_dict)
+
+            if os.path.exists(instruments_folder_cwd):
+                for file_name in os.listdir(instruments_folder_cwd):
+                    file_path = os.path.join(instruments_folder_cwd, file_name)
+                    self.add_instrument_to_dict(file_path, known_devices_dict)
+
+            return known_devices_dict
+
+        def add_instrument_to_dict(self,file_path, known_devices_dict):
+            # Check if the file is a JSON file
+            if file_path.endswith('.json'):
+                with open(file_path, 'r') as file:
+                    try:
+                        # Load JSON content
+                        json_data = json.load(file)
+
+                        # Extract the model from the JSON data
+                        model = json_data.get('Model')
+
+                        # Add the JSON data to the dictionary with the model as the key
+                        if model:
+                            known_devices_dict[model] = json_data
+                    except json.JSONDecodeError as e:
+                        print(f"Error decoding JSON in file {file_path}: {e}")
     return ResponseHandler

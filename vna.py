@@ -1,41 +1,62 @@
 
 import socket
 
-
 VNA_PORT = 5025
 
 
 def build_cmd(cmd: str) -> bytes:
+    """
+    Separated from send_cmd for clarity and ability to make send_cmd use socket.sendall
+    :paramcmd: The command you'd like to send.
+    :return: the command as a string.
+    """
     cmd = cmd
     return cmd.encode('utf-8')
 
 
 def send_cmd(s: socket.socket, cmd: str):
+    """
+    :param s: the VNA socket connection.
+    :param cmd: the command you'd like to send.
+    bytes_sent: uses socket.sendall to ensure all bytes are sent
+    """
     cmd = cmd.encode('utf-8')
     bytes_sent = s.sendall(cmd)
     return
 
 
 def receive_bytes(s: socket.socket):
-    junkheader = s.recv(1)
-    print('1 :' + junkheader.decode('utf-8'))
-    if junkheader.decode('utf-8') != '#':
-        junk = s.recv(1)
-        print(junk.decode('utf-8'))
-    print(type(junkheader))
+    """
+    Receive bytes from vna to host PC.
+    #ABC #:start of transfer, A: Num figures in B. B: Number of bytes. C: Actual B data bytes.
+    example #(A:5)(B:12345) (C: length of 12345 bytes)
+    :param s: VNA socket connection.
+    :return: Expected transmission size,
+    """
+    # ENA Transmits some empty info before # sometimes. this loop ensures we find the transmission start.
+    check_header = s.recv(1)
+    # print('Start :' + check_header.decode('utf-8'))
+    while check_header.decode('utf-8') != '#':
+        check_header = s.recv(1)
+    # Once we find the start point.
+    try:
+        # A: Magnitude of transmitted data's size. i.e. 4 = 1000-9999 in bytes.
+        bytes_number_of_digits_in_b = s.recv(1)
 
-    numOfDigitsByte = s.recv(1)
-    print(numOfDigitsByte)
+        # The magnitude (A) is converted from bytes to str.
+        str_number_of_digits_in_b = bytes_number_of_digits_in_b.decode('utf-8')
 
-    numOfDigits = numOfDigitsByte.decode('utf-8')
-    print('3: ' + numOfDigits)
+        # Receive A amount of bytes, giving transmission length (B).
+        bytes_transmission_length = s.recv(int(str_number_of_digits_in_b))
 
-    numBytes = s.recv(int(numOfDigits))
-    print(numBytes.decode('utf-8'))
+        # The transmission length (B) is converted from bytes to str.
+        string_transmission_length = bytes_transmission_length.decode('utf-8')
 
-    NumBytesStr = numBytes.decode('utf-8')
-
-    data = s.recv(int(NumBytesStr))
-    while len(data) < int(NumBytesStr):
-        data += s.recv(1024)
-    return NumBytesStr, data
+        # Attempt to receive (B) bytes.
+        data = s.recv(int(string_transmission_length))
+        # Since recv doesn't usually get all bytes in one go, receive until size is comparable.
+        while len(data) < int(string_transmission_length):
+            data += s.recv(1024)
+    except:
+        return False
+    return string_transmission_length, data

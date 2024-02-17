@@ -18,8 +18,8 @@
                     <div style="border-radius: 25px; border-color: #4CAF50; border-width: 3px; padding: 20px; width: 100%; border-style: solid;">
                         <h2 style="text-align: center;">Experiment Metadata</h2>
                         <p>
-                            <label for="title"><b>Experiment Title:</b></label>
-                            <input id="title" name="title" type="text" required>
+                            <label for="experiment_title"><b>Experiment Title:</b></label>
+                            <input id="experiment_title" name="experiment_title" type="text" required>
                         </p>
                         <p>
                             <label for="name"><b>User:</b></label>
@@ -74,14 +74,12 @@
                                 <li>Agilent ENA 5061B</li>
                             </ul>
                         <p>
-                            <label for="vna1"><b>VNA 1:</b></label>
+                            <label for="vna1"><b>VNA 1 Sensor:</b></label>
                             <input type="checkbox" id="vna1Checkbox" />
                             <input type="text" name="vna1" id="vna1" disabled />
-                            <label for="vna1_type"><b>VNA Type:</b></label>
+                            <label for="vna1_type"><b>VNA Model:</b></label>
                             <select name="vna1_type" id="vna1_type" disabled >
-                                <option value="N/A" selected>N/A</option>
-                                <option value="FieldFox VNA">FieldFox</option>
-                                <option value="ENA" >Agilent ENA</option>
+                                <option value="" selected>N/A</option>
                             </select>
                         </p>
                         <p>
@@ -94,14 +92,12 @@
                             </select>
                         </p>
                         <p>
-                            <label for="vna2"><b>VNA 2:</b></label>
+                            <label for="vna2"><b>VNA 2 Sensor:</b></label>
                             <input type="checkbox" id="vna2Checkbox"/>
                             <input type="text" name="vna2" id="vna2" disabled />
                             <label for="vna2_type"><b>VNA Type:</b></label>
                             <select name="vna2_type" id="vna2_type" disabled >
                                 <option value="" selected>N/A</option>
-                                <option value="FieldFox VNA">FieldFox</option>
-                                <option value="ENA" >Agilent ENA</option>
                             </select>
                             <label for="vna2_temp" id="vna2_probe" style="display: none;"><b>Associated temp:</b></label>
                             <select name="vna2_temp" id="vna2_temp" style="display: none;">
@@ -198,12 +194,14 @@
             <br>
             <div style="border-radius: 25px; border-color: #008CBA; border-width: 3px; padding: 20px; width: 60%; border-style: solid;">
                 <h2 style="display: inline-block;">Shutting Down</h2>
-                <p>To close the program and end the experiment, return to the terminal window and kill the python process with "Ctrl+C".</p>
+                <p>To close the program and end the experiment, Please click the button below, This will stop any data collections and connections.</p>
                 <p><strong>Note: It is recommended to first "Stop Logging" before stopping the server.</strong></p>
+                <button id="shutdown" class="button" style="background-color: #800000; border-color: #000000; border-radius:4px;" >Shutdown The Experiment</button>
+
             </div>
             <br>
             <div>
-                Version 1.0 | Last Updated May 2023 | Duncan, Lundell, Prabhu, Sellner
+                Version 2.0 | Last Updated August 2022 | Created by: Duncan, Lundell, Prabhu, Sellner | Maintained, and Updated by: Thunberg
             </div>
         </div>
     </body>

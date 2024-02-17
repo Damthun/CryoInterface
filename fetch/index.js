@@ -1,3 +1,56 @@
+function kill() {
+    fetch('/api/kill', {
+        method: 'POST'
+    }).then(res =>{
+        if(res.status === 200){
+            const state = document.getElementById("dataStatus");
+            state.innerHTML = "Stopped";
+            state.style.border = '2px solid red';
+        }
+        return res.json();
+    })
+    .then(data => alert(data))
+    .catch(err => {
+        console.log(err);
+    });
+}
+
+function load_instruments() {
+    fetch('/api/load_instruments')
+        .then(res => {
+            if (!res.ok) {
+                throw new Error(`Network response was not ok: ${res.status}`);
+            }
+            return res.json();
+        })
+        .then(data => {
+            // Assuming data is an object with models as keys
+            Object.values(data).forEach(instrument => {
+                // Access the "Model" property of each instrument
+                const model = instrument.Model;
+
+                // Create an option element
+                const option = document.createElement('option');
+                option.value = model; // Set value to the model number
+                option.textContent = model;
+
+                // Append the option to the vna1_type select dropdown
+                const vna1Select = document.getElementById('vna1_type');
+                vna1Select.appendChild(option);
+
+                // Create another option element for vna2_type
+                const optionForVna2 = option.cloneNode(true);
+
+                // Append the cloned option to the vna2_type select dropdown
+                const vna2Select = document.getElementById('vna2_type');
+                vna2Select.appendChild(optionForVna2);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching data:', error);
+        });
+}
+
 
 function start() {
     fetch('/api/start', {
@@ -136,7 +189,7 @@ function loadMetadata() {
     fetch('/api/metadata')
     .then(res => res.json())
     .then(data => {
-        document.getElementById("metadata-title").textContent = data.title;
+        document.getElementById("metadata-title").textContent = data.experiment_title;
         document.getElementById("metadata-name").textContent = data.name;
         document.getElementById("metadata-cpa").textContent = data.cpa;
         document.getElementById("metadata-date").textContent = data.date;
@@ -282,6 +335,7 @@ function cfgRate() {
 function getPeriodSeconds() {
     const mins = document.getElementById("mins").valueAsNumber;
     const sec = document.getElementById("datarate").valueAsNumber;
+
     return (mins*60)+sec;
 }
 
@@ -360,6 +414,7 @@ function init() {
 
     document.getElementById("startup").addEventListener("click", start);
     document.getElementById("stop").addEventListener("click", stop);
+    document.getElementById("shutdown").addEventListener("click", kill);
     document.getElementById("connect").addEventListener("click", connect);
     document.getElementById("connectVNA1").addEventListener("click", connectVNA1);
     document.getElementById("connectVNA2").addEventListener("click", connectVNA2);
@@ -369,7 +424,7 @@ function init() {
     document.getElementById('temp1Checkbox').onchange = function() {
         var t1box = document.getElementById('temp1');
         t1box.disabled = !this.checked;
-        //TODO: the following code adds an option to a drop down menu
+
         var vna1opt1 = document.getElementById("vna1opt1");
         var vna2opt1 = document.getElementById("vna2opt1");
         var vna1select = document.getElementById("vna1_temp");
@@ -430,6 +485,8 @@ function init() {
         }
         else{
             v1select.setAttribute("required", true);
+            v1box.setAttribute("required", true);
+            vna1type.setAttribute("required", true);
             v1select.style.display = "flex";
             vna1probe.style.display = "flex";
         }
@@ -451,6 +508,8 @@ function init() {
         }
         else{
             v2select.setAttribute("required", true);
+            v2box.setAttribute("required", true);
+            vna2type.setAttribute("required", true);
             v2select.style.display = "flex";
             vna2probe.style.display = "flex";
         }
@@ -497,3 +556,4 @@ function init() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
+document.addEventListener("DOMContentLoaded", load_instruments);
