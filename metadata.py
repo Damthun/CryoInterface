@@ -24,5 +24,5 @@ class Metadata:
     vna2: Optional[str]
     vna1_type: Optional[str]
     vna2_type: Optional[str]
-    v1_asssociated: Optional[str]
+    v1_associated: Optional[str]
     v2_associated: Optional[str]
