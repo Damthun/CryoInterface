@@ -24,6 +24,12 @@ Note: The application has been tested using Python 3.9. Python 3.5 or newer is r
 
 Access the GUI by going to `localhost:4951` in your web browser.
 
+## Package as .exe
+I've found that one can use PyInstaller to package the program using this statement.
+the non-py files/folders must be explicitly stated within the packaging statement.
+"python -m PyInstaller --onefile --icon='cryo.ico' --add-data='Instruments;Instruments' --add-data='Fetch;Fetch' main.py"
+
+
 ## Application
 
 File structure:
@@ -47,10 +53,6 @@ File structure:
    |- name_cpa_date/
    ...
 ```
-## Package as .exe
-I've found that one can use PyInstaller to package the program using this statement.
-the non-py files/folders must be explicitly stated within the packaging statement.
-"python -m PyInstaller --onefile --icon='cryo.ico' --add-data='Instruments;Instruments' --add-data='Fetch;Fetch' main.py"
 
 
 **app_thread.py**
