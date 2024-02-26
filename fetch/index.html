@@ -40,20 +40,40 @@
                         <p>
                             <b>Instructions:</b>
                             <ul>
+                                <li>Use the dropdown menu to select which temperature logger is being used.</li>
                                 <li>Check the box to select sensor(s) for this experiment.</li>
                                 <li>Once selected, use the text box to name the sensor. (ex: "top", "bottom")</li>
                             </ul>
 
                         <p>
-                            <label for="temp1"><b>Sensor 1:</b></label>
-                            <input type="checkbox" id="temp1Checkbox" title="Select to enable Temperature Sensor 1 for this experiment." />
+                            <label for="logger"><b>Logger:</b></label>
+                            <select name="logger" id="logger">
+                                <option value="Omega 4SD">Omega RDXL4SD</option>
+                                <option value="ESP 32" selected>ESP32 Housing</option>
+                            </select>
+                        </p>
+                        <div id="sensors">
+                        <p>
+                            <label for="temp1"><b>Auxiliary Sensor 1:</b></label>
+                            <input type="checkbox" id="temp1Checkbox" onclick="handleTempCheckboxClick(1)" />
                             <input type="text" name="temp1" id="temp1" title="Name Temperature Sensor 1 for this experiment." disabled />
                         </p>
                         <p>
-                            <label for="temp2"><b>Sensor 2:</b></label>
-                            <input type="checkbox" id="temp2Checkbox" />
+                            <label for="temp2"><b>Auxiliary Sensor 2:</b></label>
+                            <input type="checkbox" id="temp2Checkbox" onclick="handleTempCheckboxClick(2)" />
                             <input type="text" name="temp2" id="temp2" disabled />
                         </p>
+                        <p class="hidden">
+                            <label for="temp2"><b>Auxiliary Sensor 3:</b></label>
+                            <input type="checkbox" id="temp3Checkbox" onclick="handleTempCheckboxClick(3)"/>
+                            <input type="text" name="temp3" id="temp3" disabled />
+                        </p>
+                        <p class="hidden">
+                            <label for="temp2"><b>Auxiliary Sensor 4:</b></label>
+                            <input type="checkbox" id="temp4Checkbox" onclick="handleTempCheckboxClick(4)"/>
+                            <input type="text" name="temp4" id="temp4" disabled />
+                        </p>
+                        </div>
                         <p>Both temperature sensors connect to the microcontroller in the enclosure.</p>
                         <p>The microcontroller connects to the computer using a single USB connection.</p>
                     </div>
