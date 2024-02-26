@@ -194,14 +194,17 @@ function loadMetadata() {
         document.getElementById("metadata-cpa").textContent = data.cpa;
         document.getElementById("metadata-date").textContent = data.date;
 
+        document.getElementById("metadata-logger").textContent = data.logger === null ? "[Not Selected]" : data.logger;
         document.getElementById("metadata-temp1").textContent = data.temp1 === null ? "[Not Selected]" : data.temp1;
         document.getElementById("metadata-temp2").textContent = data.temp2 === null ? "[Not Selected]" : data.temp2;
+        document.getElementById("metadata-temp3").textContent = data.temp3 === null ? "[Not Selected]" : data.temp3;
+        document.getElementById("metadata-temp4").textContent = data.temp4 === null ? "[Not Selected]" : data.temp4;
         document.getElementById("metadata-vna1").textContent = data.vna1 === null ? "[Not Selected]" : data.vna1;
         document.getElementById("metadata-vna2").textContent = data.vna2 === null ? "[Not Selected]" : data.vna2;
         document.getElementById("metadata-vna1_type").textContent = data.vna1_type === null ? "[Not Selected]" : data.vna1_type;
         document.getElementById("metadata-vna2_type").textContent = data.vna2_type === null ? "[Not Selected]" : data.vna2_type;
-        document.getElementById("metadata-vna1_temp").textContent = data.vna1_temp === null ? "[Not Selected]" : data.vna1_temp;
-        document.getElementById("metadata-vna2_temp").textContent = data.vna2_temp === null ? "[Not Selected]" : data.vna2_temp;
+        document.getElementById("metadata-vna1_temps").textContent = data.v1_associated === null ? "[Not Selected]" : data.v1_associated;
+        document.getElementById("metadata-vna2_temps").textContent = data.v2_associated === null ? "[Not Selected]" : data.v2_associated;
     })
     .catch(err => console.log(err));
 }
