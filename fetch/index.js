@@ -302,6 +302,8 @@ function displayData() {
 
         Plotly.extendTraces('temp_plot', {x: [[t]], y: [[data.temp1]]}, [0]);
         Plotly.extendTraces('temp_plot', {x: [[t]], y: [[data.temp2]]}, [1]);
+        Plotly.extendTraces('temp_plot', {x: [[t]], y: [[data.temp3]]}, [2]);
+        Plotly.extendTraces('temp_plot', {x: [[t]], y: [[data.temp4]]}, [3]);
     });
 }
 
