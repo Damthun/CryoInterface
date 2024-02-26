@@ -1,4 +1,3 @@
-
 import socket
 
 VNA_PORT = 5025
@@ -31,7 +30,7 @@ def receive_bytes(s: socket.socket):
     #ABC #:start of transfer, A: Num figures in B. B: Number of bytes. C: Actual B data bytes.
     example #(A:5)(B:12345) (C: length of 12345 bytes)
     :param s: VNA socket connection.
-    :return: Expected transmission size,
+    :return: Expected transmission size, transmission data
     """
     # ENA Transmits some empty info before # sometimes. this loop ensures we find the transmission start.
     check_header = s.recv(1)
