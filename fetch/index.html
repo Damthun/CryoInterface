@@ -162,29 +162,45 @@
         <div id="dashboard" class="tabcontent">
             <div style="border-radius: 25px; border-color: #008CBA; border-width: 3px; padding: 20px; width: 60%; border-style: solid;">
                 <h2>Experiment Setup Metadata</h2>
-                <b>Title: </b><span id="metadata-title"></span>
-                <br>
-                <b>Name: </b><span id="metadata-name"></span>
-                <br>
-                <b>CPA: </b><span id="metadata-cpa"></span>
-                <br>
-                <b>Date: </b><span id="metadata-date"></span>
+                <div class="bordered">
+                    <b>Title: </b><span id="metadata-title"></span>
+                    <br>
+                    <b>Name: </b><span id="metadata-name"></span>
+                    <br>
+                    <b>CPA: </b><span id="metadata-cpa"></span>
+                    <br>
+                    <b>Date: </b><span id="metadata-date"></span>
+
+                </div>
+
+                <div class="bordered">
+                <b>Temperature Logger: </b><span id="metadata-logger"></span>
                 <br>
                 <b>Temperature 1: </b><span id="metadata-temp1"></span>
                 <br>
                 <b>Temperature 2: </b><span id="metadata-temp2"></span>
                 <br>
-                <b>VNA 1: </b><span id="metadata-vna1"></span>
+                <b>Temperature 3: </b><span id="metadata-temp3"></span>
                 <br>
-                <b>Vna 2: </b><span id="metadata-vna2"></span>
+                <b>Temperature 4: </b><span id="metadata-temp4"></span>
+                </div>
+                <div class="bordered">
+                <div class="vna_info">
+                    <div class="vna_name"><b>VNA 1 Sensor: </b><span id="metadata-vna1"></span></div>
+                    <div><b>VNA 2 Sensor: </b><span id="metadata-vna2"></span></div>
+                </div>
+
+                <div class="vna_info">
+                    <div class="vna_name"><b>VNA 1 Type: </b><span id="metadata-vna1_type"></span></div>
+                    <div><b>VNA 2 Type: </b><span id="metadata-vna2_type"></span></div>
+                </div>
+                </div>
+
+                <div class="bordered">
+                <b>VNA1 Associated Probe: </b><span id="metadata-vna1_temps"></span>
                 <br>
-                <b>Vna 1 Type: </b><span id="metadata-vna1_type"></span>
-                <br>
-                <b>Vna 2 Type: </b><span id="metadata-vna2_type"></span>
-                <br>
-                <b>Vna1 Associated Probe: </b><span id="metadata-vna1_temp"></span>
-                <br>
-                <b>Vna2 Associated Probe: </b><span id="metadata-vna2_temp"></span>
+                <b>VNA2 Associated Probe: </b><span id="metadata-vna2_temps"></span>
+                </div>
             </div>
             <br>
             <div style="border-radius: 25px; border-color: #008CBA; border-width: 3px; padding: 20px; width: 60%; border-style: solid;">
