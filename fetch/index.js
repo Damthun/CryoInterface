@@ -449,12 +449,12 @@ function init() {
 
 
     document.getElementById('vna1Checkbox').onchange = function() {
-        var v1box = document.getElementById('vna1');
+        let v1box = document.getElementById('vna1');
         v1box.disabled = !this.checked;
-        var v1select = document.getElementById("vna1_temp");
-        var vna1type = document.getElementById("vna1_type");
+        let v1select = document.getElementById("vna1_temps");
+        let vna1type = document.getElementById("vna1_type");
         vna1type.disabled = !this.checked
-        var vna1probe = document.getElementById("vna1_probe");
+        let vna1probe = document.getElementById("vna1_probes");
         if(v1box.disabled){
             v1select.style.display = "none";
             vna1probe.style.display = "none";
@@ -472,12 +472,12 @@ function init() {
     };
 
     document.getElementById('vna2Checkbox').onchange = function() {
-        var v2box = document.getElementById('vna2')
+        let v2box = document.getElementById('vna2')
         v2box.disabled = !this.checked;
-        var v2select = document.getElementById("vna2_temp");
-        var vna2type = document.getElementById("vna2_type");
+        let v2select = document.getElementById("vna2_temps");
+        let vna2type = document.getElementById("vna2_type");
         vna2type.disabled = !this.checked
-        var vna2probe = document.getElementById("vna2_probe");
+        let vna2probe = document.getElementById("vna2_probes");
         if(v2box.disabled){
             v2select.style.display = "none";
             vna2probe.style.display = "none";
@@ -494,7 +494,7 @@ function init() {
         }
     };
 
-    var tempPlot = Plotly.newPlot("temp_plot", {
+    let tempPlot = Plotly.newPlot("temp_plot", {
         "data": [{
             "x": [],
             "y": [],
