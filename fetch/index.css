@@ -35,7 +35,7 @@ input[type=number], select {
 
 input[type=submit] {
     width: 40%;
-    background-color: #4CAF50;
+    background-color: #532bd6;
     color: white;
     padding: 14px 20px;
     margin: 4px 0;
@@ -55,3 +55,41 @@ display: none;
     font-size: small;
     max-width: 50%;
 }
+.hidden {
+    display: none;
+}
+.assoc {
+    display: none;
+}
+.vna_info {
+    display: flex;
+    justify-content: left;
+}
+.vna_name {
+    width: 260px;
+}
+.bordered {
+    margin-bottom: 5px;
+    border-color: #008CBA;
+    border-radius: 2px;
+    border-width: 1px;
+    padding: 5px;
+    border-style: solid;
+}
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            border-radius: 25px;
+            border: 3px solid #008CBA;
+            padding: 20px;
+            width: 60%;
+            margin: 50px auto;
+            background-color: #fff;
+        }
+
+        h2 {
+            color: #008CBA;
+        }
