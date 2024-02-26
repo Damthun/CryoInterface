@@ -447,53 +447,6 @@ function init() {
     document.getElementById("cfgRate").addEventListener("click", cfgRate);
     document.getElementById("refresh").addEventListener("click", refresh);
 
-    document.getElementById('temp1Checkbox').onchange = function() {
-        var t1box = document.getElementById('temp1');
-        t1box.disabled = !this.checked;
-
-        var vna1opt1 = document.getElementById("vna1opt1");
-        var vna2opt1 = document.getElementById("vna2opt1");
-        var vna1select = document.getElementById("vna1_temp");
-        var vna2select = document.getElementById("vna2_temp");
-        if(t1box.disabled){
-            vna1opt1.style.display = "none";
-            vna2opt1.style.display = "none";
-            if(vna1select.value == "temp1"){
-                vna1select.value = null;
-            }
-            if(vna2select.value == "temp1"){
-                vna2select.value = null;
-            }
-        }
-        else{
-            vna1opt1.style.display = "block";
-            vna2opt1.style.display = "block";
-        }
-        
-    };
-
-    document.getElementById('temp2Checkbox').onchange = function() {
-        var t2box = document.getElementById('temp2');
-        t2box.disabled = !this.checked;
-        var vna1opt2 = document.getElementById("vna1opt2");
-        var vna2opt2 = document.getElementById("vna2opt2");
-        var vna1select = document.getElementById("vna1_temp");
-        var vna2select = document.getElementById("vna2_temp");
-        if(t2box.disabled){
-            vna1opt2.style.display = "none";
-            vna2opt2.style.display = "none";
-            if(vna1select.value == "temp2"){
-                vna1select.value = null;
-            }
-            if(vna2select.value == "temp2"){
-                vna2select.value = null;
-            }
-        }
-        else{
-            vna1opt2.style.display = "block";
-            vna2opt2.style.display = "block";
-        }
-    };
 
     document.getElementById('vna1Checkbox').onchange = function() {
         var v1box = document.getElementById('vna1');
