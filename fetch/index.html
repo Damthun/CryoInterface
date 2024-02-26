@@ -102,31 +102,56 @@
                                 <option value="" selected>N/A</option>
                             </select>
                         </p>
-                        <p>
-                            <label for="vna1_temp" id="vna1_probe" style="display: none;"><b>Associated temp:</b></label>
-                            <select name="vna1_temp" id="vna1_temp" style="display: none;">
-                                <option value="" selected></option>
-                                <option value="N/A">N/A</option>
-                                <option id="vna1opt1" value="Temp Sensor 1" style="display: none;">Temp Sensor 1</option>
-                                <option id="vna1opt2" value="Temp Sensor 2" style="display: none;">Temp Sensor 2</option>
-                            </select>
-                        </p>
+
+                            <label for="vna1_temps" id="vna1_probes" style="display: none;"><b>Associated thermocouple(s):</b></label>
+                            <p class="assoc" id="vna1_temps">
+                                     <label for="v1_associated" style="display: none;"></label>
+                                        <input type="hidden" name="v1_associated" id="v1_associated" value="" style="display: none;">
+                                      <label for="v1p1"><b>1:</b></label>
+                                        <input type="checkbox" id="v1p1" value="1" disabled>
+
+                                    <label for="v1p2"><b> 2:</b></label>
+                                        <input type="checkbox" id="v1p2" value="2" disabled>
+
+                                    <label for="v1p3"><b> 3:</b></label>
+                                        <input type="checkbox" id="v1p3" value="3" disabled>
+
+                                    <label for="v1p4"><b> 4:</b></label>
+                                        <input type="checkbox" id="v1p4" value="4" disabled>
+                            </p>
+
+
                         <p>
                             <label for="vna2"><b>VNA 2 Sensor:</b></label>
                             <input type="checkbox" id="vna2Checkbox"/>
                             <input type="text" name="vna2" id="vna2" disabled />
-                            <label for="vna2_type"><b>VNA Type:</b></label>
+                            <label for="vna2_type"><b>VNA Model:</b></label>
                             <select name="vna2_type" id="vna2_type" disabled >
                                 <option value="" selected>N/A</option>
                             </select>
-                            <label for="vna2_temp" id="vna2_probe" style="display: none;"><b>Associated temp:</b></label>
-                            <select name="vna2_temp" id="vna2_temp" style="display: none;">
-                                <option value="" selected></option>
-                                <option value="N/A">N/A</option>
-                                <option id="vna2opt1" value="Temp Sensor 1" style="display: none;">Temp Sensor 1</option>
-                                <option id="vna2opt2" value="Temp Sensor 2" style="display: none;">Temp Sensor 2</option>
-                            </select>
                         </p>
+
+                            <label for="vna1_temps" id="vna2_probes" style="display: none;"><b>Associated thermocouple(s):</b></label>
+                            <p class="assoc" id="vna2_temps" >
+
+                                    <label for="v2_associated" style="display: none;"></label>
+                                        <input type="hidden" name="v2_associated" id="v2_associated" style="display: none;">
+
+                                    <label for="v2p1"><b>1:</b></label>
+                                        <input type="checkbox" id="v2p1" value="1" disabled>
+
+                                    <label for="v2p2"><b> 2:</b></label>
+                                        <input type="checkbox" id="v2p2" value="2" disabled>
+
+                                    <label for="v2p3"><b> 3:</b></label>
+                                        <input type="checkbox" id="v2p3" value="3" disabled>
+
+                                    <label for="v2p4"><b> 4:</b></label>
+                                        <input type="checkbox" id='v2p4' value="4" disabled>
+
+                            </p>
+
+
                     </div>
                     <div style="padding: 20px; width: 100%; display: flex; align-items: center; justify-content: center;">
                         <input type="submit" value="Create Experiment" class="button">
