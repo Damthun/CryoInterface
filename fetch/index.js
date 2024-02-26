@@ -496,6 +496,64 @@ function init() {
             vna2probe.style.display = "flex";
         }
     };
+    document.getElementById('vna1_temps').onchange = function () {
+        let v1_selections = []
+        let v1_assoc = document.getElementById('v1_associated');
+        const checkboxes = document.querySelectorAll('#vna1_temps input[type="checkbox"]');
+        console.log(checkboxes)
+        for (let i = 0, len = checkboxes.length; i < len; i++) {
+            if(checkboxes[i].checked){
+                v1_selections.push(checkboxes[i].value)
+
+            }
+            }
+
+        v1_assoc.value = v1_selections
+        console.log(v1_assoc.value)
+        console.log(v1_selections)
+        console.log(v1_selections.toString())
+    };
+    document.getElementById('vna2_temps').onchange = function () {
+        let v2_selections = []
+        let v2_assoc = document.getElementById('v2_associated');
+        const checkboxes = document.querySelectorAll('#vna2_temps input[type="checkbox"]');
+        console.log(checkboxes)
+        for (let i = 0, len = checkboxes.length; i < len; i++) {
+            if(checkboxes[i].checked){
+                v2_selections.push(checkboxes[i].value)
+            }
+            }
+        v2_assoc.value = v2_selections
+        console.log(v2_assoc.value)
+        console.log(v2_selections)
+    };
+    document.getElementById('logger').onchange = function() {
+        let logger = document.getElementById('logger');
+        let drops = document.getElementsByClassName("hidden");
+        let t3text = document.getElementById("temp3")
+        let t4text = document.getElementById("temp4")
+        let v1toggle3 = document.getElementById('v1p3')
+        let v1toggle4 = document.getElementById('v1p4')
+        let v2toggle3 = document.getElementById('v2p3')
+        let v2toggle4 = document.getElementById('v2p4')
+        if(logger.value === "Omega 4SD") {
+            for (let i = 0, len = drops.length; i < len; i++) {
+                drops[i].style.display = "block";
+            }
+        }
+        else if(logger.value === "ESP 32"){
+            for (let i = 0, len = drops.length; i < len; i++) {
+                drops[i].style.display = "none";
+                t3text.removeAttribute("required")
+                t4text.removeAttribute("required")
+                }
+            v1toggle3.disabled = true;
+            v1toggle4.disabled = true;
+            v2toggle3.disabled = true;
+            v2toggle4.disabled = true;
+        }
+
+    };
 
     let tempPlot = Plotly.newPlot("temp_plot", {
         "data": [{
@@ -506,6 +564,14 @@ function init() {
             "x": [],
             "y": [],
             "name": "Temp 2",
+        }, {
+            "x": [],
+            "y": [],
+            "name": "Temp 3",
+        }, {
+            "x": [],
+            "y": [],
+            "name": "Temp 4",
         }],
         "layout": {
             "width": 800,
