@@ -15,11 +15,14 @@ class Metadata:
     name: str
     cpa: str
     date: str
+    logger: Optional[str]
     temp1: Optional[str]
     temp2: Optional[str]
+    temp3: Optional[str]
+    temp4: Optional[str]
     vna1: Optional[str]
     vna2: Optional[str]
     vna1_type: Optional[str]
     vna2_type: Optional[str]
-    vna1_temp: Optional[str]
-    vna2_temp: Optional[str]
+    v1_asssociated: Optional[str]
+    v2_associated: Optional[str]
