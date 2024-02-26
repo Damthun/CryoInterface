@@ -407,6 +407,30 @@ function checkStatus() {
     .catch(err => console.log(err));
 }
 
+function handleTempCheckboxClick(index) {
+    let tempCheckbox = document.getElementById('temp' + index + 'Checkbox')
+    let tempTextbox = document.getElementById("temp" + index);
+    let v1Checkbox = document.getElementById('v1p' + index);
+    let v2Checkbox = document.getElementById('v2p' + index);
+
+    // Optional: Uncheck the v1 and v2 checkboxes when temp checkbox is unchecked
+
+    if (tempCheckbox.checked) {
+      v1Checkbox.disabled = false;
+      v2Checkbox.disabled = false;
+      tempTextbox.disabled = false;
+      tempTextbox.setAttribute("required", true);
+
+
+    }
+    else if (!tempCheckbox.checked){
+        v1Checkbox.disabled = true;
+        v2Checkbox.disabled = true;
+        tempTextbox.disabled = true;
+        tempTextbox.removeAttribute("required")
+    }
+}
+
 function init() {
     document.getElementById('date').valueAsDate = new Date();
 
