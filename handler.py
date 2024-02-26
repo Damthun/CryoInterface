@@ -30,6 +30,7 @@ def resource_path(relative_path):
 
     return os.path.join(base_path, relative_path)
 
+
 def build_response_handler(app_thread: AppThread):
     """
     Build the HTTP response handler class.
@@ -190,9 +191,9 @@ def build_response_handler(app_thread: AppThread):
                         # Write to stream.
                         self.wfile.write(s.encode('utf-8'))
                 except:
-                    # An exception occured and the connection is closed, remove the queue from the pool.
+                    # An exception occurred and the connection is closed, remove the queue from the pool.
                     app_thread.queue_pool.remove(queue)
-                    logging.exception('An error occured while serving stream data.')
+                    logging.exception('An error occurred while serving stream data.')
 
         def update_config(self) -> None:
             """
@@ -253,7 +254,12 @@ def build_response_handler(app_thread: AppThread):
             Connect to microcontroller for temperature measurement.
             """
             # Check if a temperature sensor was selected
-            if app_thread.metadata.temp1 is None and app_thread.metadata.temp2 is None:
+            if (app_thread.metadata.temp1 is None and
+                app_thread.metadata.temp2 is None and
+                app_thread.metadata.temp3 is None and
+                app_thread.metadata.temp4 is None
+                ):
+
                 msg = 'No temperature sensor was selected for this experiment.'
                 self.send_json_response(msg, status=HTTPStatus.BAD_REQUEST)
                 return
@@ -483,59 +489,35 @@ def build_response_handler(app_thread: AppThread):
                 logging.exception(msg)
                 self.send_json_response(msg, status=HTTPStatus.INTERNAL_SERVER_ERROR)
                 return
-            
-            temp1 = metadata.get('temp1')
-            if temp1 == '':
-                temp1 = 'temp1'
+            optional_metatags = [
+                "logger", "temp1", "temp2",
+                "temp3", "temp4", "vna1",
+                "vna2", "vna1_type", "vna2_type",
+                "v1_associated", "v2_associated"
+                ]
 
-            temp2 = metadata.get('temp2')
-            if temp2 == '':
-                temp2 = 'temp2'
-            
-            vna1 = metadata.get('vna1')
-            if vna1 == '':
-                vna1 = 'vna1'
-
-            vna1_type = metadata.get('vna1_type')
-            if vna1_type == '':
-                vna1_type = 'vna1_type'
-
-            vna2 = metadata.get('vna2')
-            if vna2 == '':
-                vna2 = 'vna2'
-
-            vna2_type = metadata.get('vna2_type')
-            if vna2_type == '':
-                vna2_type = 'vna2_type'
-
-            vna1_temp = metadata.get('vna1_temp')
-            # Check that the associated temperature selection was actually selected.
-            if (vna1_temp == 'temp1' and not temp1) or (vna1_temp == 'temp2' and not temp2):
-                msg = 'The temperature sensor associated with VNA 1 was not selected.'
-                logging.warning(msg)
-                self.send_json_response(msg, status=HTTPStatus.BAD_REQUEST)
-                return
-
-            vna2_temp = metadata.get('vna2_temp')
-            # Check that the associated temperature selection was actually selected.
-            if (vna2_temp == 'temp1' and not temp1) or (vna2_temp == 'temp2' and not temp2):
-                msg = 'The temperature sensor associated with VNA 2 was not selected.'
-                logging.warning(msg)
-                self.send_json_response(msg, status=HTTPStatus.BAD_REQUEST)
-                return
-
+            for index, item in enumerate(optional_metatags):
+                check = metadata.get(item)
+                print(check)
+                if check != "":
+                    optional_metatags[index] = check
+                elif check == "":
+                    optional_metatags[index] = None
             app_thread.metadata = Metadata(experiment_title=title,
                                            name=name,
                                            cpa=cpa,
                                            date=date,
-                                           temp1=temp1,
-                                           temp2=temp2,
-                                           vna1=vna1,
-                                           vna2=vna2,
-                                           vna1_type=vna1_type,
-                                           vna2_type=vna2_type,
-                                           vna1_temp=vna1_temp,
-                                           vna2_temp=vna2_temp
+                                           logger=optional_metatags[0],
+                                           temp1=optional_metatags[1],
+                                           temp2=optional_metatags[2],
+                                           temp3=optional_metatags[3],
+                                           temp4=optional_metatags[4],
+                                           vna1=optional_metatags[5],
+                                           vna2=optional_metatags[6],
+                                           vna1_type=optional_metatags[7],
+                                           vna2_type=optional_metatags[8],
+                                           v1_associated=optional_metatags[9],
+                                           v2_associated=optional_metatags[10]
                                            )
             app_thread.dir = directory
             app_thread.experiment_selected = True
