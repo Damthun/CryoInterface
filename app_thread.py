@@ -10,7 +10,7 @@ import socket
 from threading import Thread
 import time
 from typing import List, Optional
-
+import re
 import serial
 
 from config import Config
@@ -63,6 +63,7 @@ class AppThread(Thread):
 
         # Regardless of whether the application has been killed.
         self.killed = False
+        self.possible_temps: Optional[list] = None
         self.known_devices: Optional[dict] = {}
 
     def run(self):
@@ -74,12 +75,16 @@ class AppThread(Thread):
             last_reading = 0
             # If the experiment is running.
             if self.running and self.data_collection:
-                if self.metadata.temp1 or self.metadata.temp2:
-                    path = os.path.join('experiments', self.dir, 'temperatures.csv')
-                    # Open the file for saving temperature data.
-                    with open(path, 'w+', encoding='utf-8') as wf:
-                        # We loop here so check again if the experiment is running and
-                        # whether we need to try again at taking data due to an error.
+
+                self.possible_temps = [self.metadata.temp1, self.metadata.temp2,
+                                       self.metadata.temp3, self.metadata.temp4]
+                path = os.path.join('experiments', self.dir, 'temperatures.csv')
+                # Open the file for saving temperature data, a+ for writing and updating.
+                with open(path, 'a+', encoding='utf-8') as wf:
+                    # We loop here so check again if the experiment is running and the
+                    # application is alive.
+                    while self.running and not self.killed:
+                        # Whether we need to try again at taking data due to an error.
                         retry = False
                         # Get the current time.
                         t = time.time()
@@ -87,26 +92,29 @@ class AppThread(Thread):
                         # If we have a USB connection.
                         if self.con:
                             try:
-                                temp1, temp2 = self._read_temp_data()
+                                # Use function to grab dictionary containing selected temps.
+                                readings = self._read_sensor_data(self.metadata.logger)
 
-                                data = {
-                                    'time': t,
-                                    'temp1': temp1,
-                                    'temp2': temp2,
-                                }
+                                # Write Time, and all temp data to file.
+                                wf.write(f'{t}')
+                                for key in readings:
+                                    wf.write(f',{readings[key]}')
+                                wf.write(f'\n')
+
+                                wf.flush()
+
+                                readings['time'] = t
 
                                 # Store data points in memory.
-                                self.data.append(data)
+                                self.data.append(readings)
                                 # Write to the CSV file.
-                                wf.write(f'{t},{temp1},{temp2}\n')
-                                wf.flush()
 
                                 # Keep last reading, functions much like tic, toc.
                                 last_reading = t
 
                                 # Send data to every queue in the pool.
                                 for q in self.queue_pool:
-                                    q.put(data)
+                                    q.put(readings)
 
                             except serial.serialutil.SerialException:
                                 msg = 'Encountered an error while communicating with the ESP32.' \
@@ -154,6 +162,7 @@ class AppThread(Thread):
                         if self.vna_con2:
                             print('VNA2')
                             try:
+
                                 dt = datetime.fromtimestamp(t)
 
                                 name = f"{dt.year}_{dt.month:02d}_{dt.day:02d}_{dt.hour:02d}_{dt.minute:02d}_{dt.second:02d}"
@@ -188,19 +197,17 @@ class AppThread(Thread):
                                 if self.con and t >= last_reading + 15:
 
                                     try:
-                                        temp1, temp2 = self._read_temp_data()
-                                        data = {
-                                            'time': t,
-                                            'temp1': temp1,
-                                            'temp2': temp2,
-                                        }
+                                        readings = self._read_sensor_data(self.metadata.logger)
+                                        readings['time'] = t
+
+
 
                                         # Store data points in memory.
-                                        self.data.append(data)
+                                        self.data.append(readings)
 
                                         # Send data to every queue in the pool.
                                         for q in self.queue_pool:
-                                            q.put(data)
+                                            q.put(readings)
 
                                     except serial.serialutil.SerialException:
                                         msg = 'Encountered an error while communicating with the ESP32.' \
@@ -278,15 +285,65 @@ class AppThread(Thread):
         if self.vna_con2:
             self.vna_con2.close()
 
-    def _read_temp_data(self):
-        # Request temperature from ESP32
-        self.con.write('GET TEMP\n'.encode('utf-8'))
-        self.con.flush()
+    def _read_sensor_data(self, logger):
 
-        # Read until the newline character, decode to utf-8,
-        # and remove the ending newline character.
-        data = self.con.readline().decode('utf-8').rstrip()
-        # Get temperatures from the string.
-        temp1, temp2 = [float(x) for x in data.split(',')]
+        if logger == "ESP 32":
 
-        return temp1, temp2
+            # Request temperature from ESP32
+            self.con.write('GET TEMP\n'.encode('utf-8'))
+            self.con.flush()
+
+            # Read until the newline character, decode to utf-8,
+            # and remove the ending newline character.
+            data = self.con.readline().decode('utf-8').rstrip()
+            # Get temperatures from the string.
+            #print(data)
+            temp1, temp2 = [float(x) for x in data.split(',')]
+            temps = {"temp1": temp1, "temp2": temp2}
+            return temps
+
+        elif logger == "Omega 4SD":
+            lookup_correlate = ["temp1", "temp2", "temp3", "temp4"]
+            temp_holder = {}
+            for index, item in enumerate(self.possible_temps):
+                if item is not None:
+                    probe = lookup_correlate[index]
+                    temp_holder[probe] = None
+
+            while None in temp_holder.values():
+                try:
+                    self.con.reset_input_buffer()
+
+                    packet = self.con.read(16)
+
+                    reading = packet.decode('utf-8')
+
+                    digit_stream = str(reading)
+                    digit_stream = re.sub('[^0-9]', '', digit_stream)
+
+                    channel = "temp" + digit_stream[1]
+                    if channel not in temp_holder.keys():
+                        print('Non Selected Channel')
+                        continue
+                    else:
+                        print('channel: ' + channel)
+
+                        units = digit_stream[2:4]
+                        print("units: " + units)
+                        sign = digit_stream[4]
+                        print("sign: " + sign)
+
+                        decimal = int(digit_stream[5])
+                        print('deci: ' + str(decimal))
+                        temp_value = digit_stream[6:]
+                        if decimal == 0:
+                            temp = int(temp_value)
+
+                        else:
+                            temp = temp_value[:-decimal] + '.' + temp_value[-decimal:]
+                        directionality = ["+", "-"]
+                        temp_holder[channel] = float(directionality[int(sign)] + str(temp))
+                except ValueError:
+                    print('Value error, Please check that thermocouple is connected!')
+            return temp_holder
+
