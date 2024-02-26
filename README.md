@@ -128,7 +128,7 @@ Signal to the application to begin collecting data.
 
 **POST /api/stop**
 
-Signal to the application to stop collecting data.
+Signal to the application to pause data collection thread.
 
 **POST /api/create_experiment**
 
@@ -151,5 +151,11 @@ Connect to the VNA with the specified IP address.
 **POST /api/connect_vna2**
 
 Connect to the VNA with the specified IP address.
+
+`send:` IP address as a string.
+
+**POST /api/kill**
+
+attempts to stop app_thread.
 
 `send:` IP address as a string.
