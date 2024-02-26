@@ -28,6 +28,12 @@ Access the GUI by going to `localhost:4951` in your web browser.
 
 File structure:
 ```
+|- fetch/
+   |- index.js
+   |- index.css
+   |- index.html
+   |- plotly-2.19.1.min.js
+   ...
 |- app_thread.py
 |- config.py
 |- handler.py
@@ -35,10 +41,17 @@ File structure:
 |- metadata.py
 |- utils.py
 |- vna.py
+|- vna_funcs.py
+|- cryo.ico
 |- experiments/
    |- name_cpa_date/
    ...
 ```
+## Package as .exe
+I've found that one can use PyInstaller to package the program using this statement.
+the non-py files/folders must be explicitly stated within the packaging statement.
+"python -m PyInstaller --onefile --icon='cryo.ico' --add-data='Instruments;Instruments' --add-data='Fetch;Fetch' main.py"
+
 
 **app_thread.py**
 
