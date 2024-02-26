@@ -15,7 +15,6 @@ import serial
 
 from config import Config
 from metadata import Metadata
-from vna import build_cmd
 from vna_funcs import ping_vna, vna_csv, vna_s2p
 
 
@@ -75,7 +74,7 @@ class AppThread(Thread):
             last_reading = 0
             # If the experiment is running.
             if self.running and self.data_collection:
-
+                # List of auxiliary sensor descriptors.
                 self.possible_temps = [self.metadata.temp1, self.metadata.temp2,
                                        self.metadata.temp3, self.metadata.temp4]
                 path = os.path.join('experiments', self.dir, 'temperatures.csv')
@@ -89,18 +88,20 @@ class AppThread(Thread):
                         # Get the current time.
                         t = time.time()
 
-                        # If we have a USB connection.
+                        # If we have a USB connection; Auxiliary sensor data gathering.
                         if self.con:
                             try:
                                 # Use function to grab dictionary containing selected temps.
                                 readings = self._read_sensor_data(self.metadata.logger)
 
-                                # Write Time, and all temp data to file.
+                                # Write Time information to file.
                                 wf.write(f'{t}')
+                                # For each auxiliary data, write to file.
                                 for key in readings:
                                     wf.write(f',{readings[key]}')
+                                # Write newline to separate readings.
                                 wf.write(f'\n')
-
+                                # Flush the write buffer.
                                 wf.flush()
 
                                 readings['time'] = t
@@ -128,7 +129,7 @@ class AppThread(Thread):
                             except:
                                 logging.exception('Exception encountered in app thread.')
 
-                        # If we are connected to VNA 1.
+                        # If we are connected to VNA 1; VNA 1 data gathering loop.
                         if self.vna_con1:
                             print('VNA1')
                             try:
@@ -158,7 +159,7 @@ class AppThread(Thread):
                                     logging.exception('Error closing connection.')
                                 self.vna_con1 = None
 
-                        # If we are connected to VNA 2.
+                        # If we are connected to VNA 2; VNA 2 data gathering loop.
                         if self.vna_con2:
                             print('VNA2')
                             try:
@@ -277,7 +278,7 @@ class AppThread(Thread):
         """
         print('Stopped the Thread')
         self.killed = True
-        # Close all connections.
+        # Close all connections. Serial, first and second sockets.
         if self.con:
             self.con.close()
         if self.vna_con1:
@@ -286,9 +287,15 @@ class AppThread(Thread):
             self.vna_con2.close()
 
     def _read_sensor_data(self, logger):
+        """
+        Grab auxiliary sensor data.
 
+        :param logger: what device is being used to gather data.
+
+        :return: Dictionary containing readings.
+        """
+        # Original logger used with the platform.
         if logger == "ESP 32":
-
             # Request temperature from ESP32
             self.con.write('GET TEMP\n'.encode('utf-8'))
             self.con.flush()
@@ -297,53 +304,51 @@ class AppThread(Thread):
             # and remove the ending newline character.
             data = self.con.readline().decode('utf-8').rstrip()
             # Get temperatures from the string.
-            #print(data)
             temp1, temp2 = [float(x) for x in data.split(',')]
+            # Assign values to dictionary.
             temps = {"temp1": temp1, "temp2": temp2}
             return temps
 
         elif logger == "Omega 4SD":
-            lookup_correlate = ["temp1", "temp2", "temp3", "temp4"]
-            temp_holder = {}
-            for index, item in enumerate(self.possible_temps):
+            lookup_correlate = ["temp1", "temp2", "temp3", "temp4"]  # Used to name keys in temp_holder.
+            temp_holder = {}  # Dictionary to hold temp key and temperature reading.
+            for index, item in enumerate(self.possible_temps):  # Iterate through metadata to check if probe was named.
+                # If named, add temp[iterator] to temp_holder.
                 if item is not None:
                     probe = lookup_correlate[index]
                     temp_holder[probe] = None
-
+            # Loop that takes in 16 byte readings and fills temp_holder, ignores readings from non-wanted channels.
             while None in temp_holder.values():
                 try:
-                    self.con.reset_input_buffer()
+                    self.con.reset_input_buffer()  # Since we're not continuously streaming data, remove buffer.
 
-                    packet = self.con.read(16)
+                    packet = self.con.read(16)  # Read 16 bytes.
 
-                    reading = packet.decode('utf-8')
+                    reading = packet.decode('utf-8')  # Decode so that we can use regex to remove non-numerical digits.
 
                     digit_stream = str(reading)
-                    digit_stream = re.sub('[^0-9]', '', digit_stream)
+                    digit_stream = re.sub('[^0-9]', '', digit_stream)  # remove anything that's not 0-9
 
                     channel = "temp" + digit_stream[1]
+                    # Logic for determining whether reading is wanted.
                     if channel not in temp_holder.keys():
                         print('Non Selected Channel')
                         continue
                     else:
-                        print('channel: ' + channel)
 
-                        units = digit_stream[2:4]
-                        print("units: " + units)
-                        sign = digit_stream[4]
-                        print("sign: " + sign)
+                        units = digit_stream[2:4]  # Not using in function, Assumed to be Celcius.
+                        sign = digit_stream[4]  # Binary 0/1 for positive/negative.
+                        decimal = int(digit_stream[5])  # Num digits for decimal from right.
 
-                        decimal = int(digit_stream[5])
-                        print('deci: ' + str(decimal))
-                        temp_value = digit_stream[6:]
+                        temp_value = digit_stream[6:]  # Temperature value.
                         if decimal == 0:
                             temp = int(temp_value)
 
                         else:
-                            temp = temp_value[:-decimal] + '.' + temp_value[-decimal:]
+                            temp = temp_value[:-decimal] + '.' + temp_value[-decimal:]  # separate temps by decimal.
                         directionality = ["+", "-"]
-                        temp_holder[channel] = float(directionality[int(sign)] + str(temp))
+                        temp_holder[channel] = float(directionality[int(sign)] + str(temp))  # Assign to dictionary.
                 except ValueError:
                     print('Value error, Please check that thermocouple is connected!')
-            return temp_holder
+            return temp_holder  # Return Dictionary.
 
