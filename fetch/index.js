@@ -15,8 +15,8 @@ function kill() {
     });
 }
 
-function load_instruments() {
-    fetch('/api/load_instruments')
+function loadInstruments() {
+    fetch('/api/loadInstruments')
         .then(res => {
             if (!res.ok) {
                 throw new Error(`Network response was not ok: ${res.status}`);
@@ -56,7 +56,7 @@ function start() {
     fetch('/api/start', {
         method: 'POST'
     }).then(res=>{
-        if(res.status == 200){
+        if(res.status === 200){
             const state = document.getElementById("dataStatus");
             state.innerHTML = "Running";
             state.style.border = '2px solid green';
@@ -73,7 +73,7 @@ function stop() {
     fetch('/api/stop', {
         method: 'POST'
     }).then(res =>{
-        if(res.status == 200){
+        if(res.status === 200){
             const state = document.getElementById("dataStatus");
             state.innerHTML = "Stopped";
             state.style.border = '2px solid red';
@@ -99,7 +99,7 @@ function connect() {
         body: json
     })
     .then(res => {
-        if(res.status == 200){
+        if(res.status === 200){
             const state = document.getElementById("tempStatus");
             state.innerHTML = "Connected";
             state.style.border = '2px solid green';
@@ -128,7 +128,7 @@ function connectVNA1() {
         body: json
     })
     .then(res => {
-        if(res.status == 200){
+        if(res.status === 200){
             const state = document.getElementById("vna1status");
             state.innerHTML = "Connected";
             state.style.border = '2px solid green';
@@ -163,7 +163,7 @@ function connectVNA2() {
         body: json
     })
     .then(res => {
-        if(res.status == 200){
+        if(res.status === 200){
             const state = document.getElementById("vna2status");
             state.innerHTML = "Connected";
             state.style.border = '2px solid green';
@@ -604,4 +604,4 @@ function init() {
 }
 
 document.addEventListener("DOMContentLoaded", init);
-document.addEventListener("DOMContentLoaded", load_instruments);
+document.addEventListener("DOMContentLoaded", loadInstruments);
