@@ -1,91 +1,95 @@
+// Utility functions
+
+function handleResponse(res) {
+    if (!res.ok) {
+        throw new Error(`Network response was not ok: ${res.status}`);
+    }
+    return res.json();
+}
+
+function handleError(error) {
+    console.error('Error fetching data:', error);
+    alert("An error occurred.");
+}
+
+function addOptionToSelect(value, selectId) {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = value;
+    document.getElementById(selectId).appendChild(option);
+}
+
+function updateStatus(elementId, text, color) {
+    const state = document.getElementById(elementId);
+    state.innerHTML = text;
+    state.style.border = `2px solid ${color}`;
+}
+
+function handleVnaResponse(statusElementId) {
+    return function (res) {
+        if (res.status === 200) {
+            const state = document.getElementById(statusElementId);
+            state.innerHTML = "Connected";
+            state.style.border = '2px solid green';
+            return res.json();
+        } else {
+            const state = document.getElementById(statusElementId);
+            state.innerHTML = "Not Connected";
+            state.style.border = '2px solid red';
+            return Promise.reject("Failed to connect to VNA.");
+        }
+    };
+}
+
+//Main Functionalities.
 function kill() {
     fetch('/api/kill', {
         method: 'POST'
-    }).then(res =>{
-        if(res.status === 200){
-            const state = document.getElementById("dataStatus");
-            state.innerHTML = "Stopped";
-            state.style.border = '2px solid red';
-        }
-        return res.json();
     })
-    .then(data => alert(data))
-    .catch(err => {
-        console.log(err);
-    });
+    .then(handleResponse)
+    .then(data => {
+        updateStatus("dataStatus", "Stopped", "red");
+        alert(data);
+    })
+    .catch(handleError);
 }
 
 function loadInstruments() {
     fetch('/api/loadInstruments')
-        .then(res => {
-            if (!res.ok) {
-                throw new Error(`Network response was not ok: ${res.status}`);
-            }
-            return res.json();
-        })
+        .then(handleResponse)
         .then(data => {
-            // Assuming data is an object with models as keys
             Object.values(data).forEach(instrument => {
-                // Access the "Model" property of each instrument
-                const model = instrument.Model;
-
-                // Create an option element
-                const option = document.createElement('option');
-                option.value = model; // Set value to the model number
-                option.textContent = model;
-
-                // Append the option to the vna1_type select dropdown
-                const vna1Select = document.getElementById('vna1_type');
-                vna1Select.appendChild(option);
-
-                // Create another option element for vna2_type
-                const optionForVna2 = option.cloneNode(true);
-
-                // Append the cloned option to the vna2_type select dropdown
-                const vna2Select = document.getElementById('vna2_type');
-                vna2Select.appendChild(optionForVna2);
+                const model = instrument["Model"];
+                addOptionToSelect(model, 'vna1-type');
+                addOptionToSelect(model, 'vna2-type');
             });
         })
-        .catch(error => {
-            console.error('Error fetching data:', error);
-        });
+        .catch(handleError);
 }
-
 
 function start() {
     fetch('/api/start', {
         method: 'POST'
-    }).then(res=>{
-        if(res.status === 200){
-            const state = document.getElementById("dataStatus");
-            state.innerHTML = "Running";
-            state.style.border = '2px solid green';
-        }
-        return res.json();
     })
-    .then(data => alert(data))
-    .catch(err => {
-        console.log(err);
-    });
+    .then(handleResponse)
+    .then(data => {
+        updateStatus("dataStatus", "Running", "green");
+        alert(data);
+    })
+    .catch(handleError);
 }
 
 function stop() {
     fetch('/api/stop', {
         method: 'POST'
-    }).then(res =>{
-        if(res.status === 200){
-            const state = document.getElementById("dataStatus");
-            state.innerHTML = "Stopped";
-            state.style.border = '2px solid red';
-        }
-        return res.json();
     })
-    .then(data => alert(data))
-    .catch(err => {
-        console.log(err);
-    });
+    .then(handleResponse)
+    .then(data => {
+        updateStatus("dataStatus", "Stopped", "red");
+        alert(data);
+    })
+    .catch(handleError);
 }
-
 function connect() {
     const port = document.getElementById("port").value;
     const json = JSON.stringify(port);
@@ -98,21 +102,12 @@ function connect() {
         method: "POST",
         body: json
     })
-    .then(res => {
-        if(res.status === 200){
-            const state = document.getElementById("tempStatus");
-            state.innerHTML = "Connected";
-            state.style.border = '2px solid green';
-        }
-        return res.json();
-    })
+    .then(handleResponse)
     .then(data => {
+        updateStatus("tempStatus", "Connected", "green");
         alert(data);
     })
-    .catch(err => { 
-        console.log(err);
-        console.log("Failed to connect to USB device.");
-    });
+    .catch(handleError);
 }
 
 function connectVNA1() {
@@ -127,27 +122,9 @@ function connectVNA1() {
         method: "POST",
         body: json
     })
-    .then(res => {
-        if(res.status === 200){
-            const state = document.getElementById("vna1status");
-            state.innerHTML = "Connected";
-            state.style.border = '2px solid green';
-            // alert("Successfully Connected");
-        } else {
-            const state = document.getElementById("vna1status");
-            state.innerHTML = "Not Connected";
-            state.style.border = '2px solid red';
-        }
-        return res.json();
-    })
-    .then(data => {
-        // checkStatus();
-        alert(data);
-    })
-    .catch(err => { 
-        console.log("Failed to connect to VNA.");
-        console.log(err);
-    });
+    .then(handleVnaResponse("vna1status"))
+    .then(data => alert(data))
+    .catch(handleError);
 }
 
 function connectVNA2() {
@@ -162,69 +139,54 @@ function connectVNA2() {
         method: "POST",
         body: json
     })
-    .then(res => {
-        if(res.status === 200){
-            const state = document.getElementById("vna2status");
-            state.innerHTML = "Connected";
-            state.style.border = '2px solid green';
-            // alert("Successfully Connected");
-        } else {
-            const state = document.getElementById("vna2status");
-            state.innerHTML = "Not Connected";
-            state.style.border = '2px solid red';
-        }
-        return res.json();
-    })
-    .then(data => {
-        // checkStatus();
-        alert(data);
-    })
-    .catch(err => { 
-        console.log("Failed to connect to VNA.");
-        console.log(err);
-    });
+    .then(handleVnaResponse("vna2status"))
+    .then(data => alert(data))
+    .catch(handleError);
 }
 
 function loadMetadata() {
     fetch('/api/metadata')
-    .then(res => res.json())
+    .then(handleResponse)
     .then(data => {
-        document.getElementById("metadata-title").textContent = data.experiment_title;
-        document.getElementById("metadata-name").textContent = data.name;
-        document.getElementById("metadata-cpa").textContent = data.cpa;
-        document.getElementById("metadata-date").textContent = data.date;
-
-        document.getElementById("metadata-logger").textContent = data.logger === null ? "[Not Selected]" : data.logger;
-        document.getElementById("metadata-temp1").textContent = data.temp1 === null ? "[Not Selected]" : data.temp1;
-        document.getElementById("metadata-temp2").textContent = data.temp2 === null ? "[Not Selected]" : data.temp2;
-        document.getElementById("metadata-temp3").textContent = data.temp3 === null ? "[Not Selected]" : data.temp3;
-        document.getElementById("metadata-temp4").textContent = data.temp4 === null ? "[Not Selected]" : data.temp4;
-        document.getElementById("metadata-vna1").textContent = data.vna1 === null ? "[Not Selected]" : data.vna1;
-        document.getElementById("metadata-vna2").textContent = data.vna2 === null ? "[Not Selected]" : data.vna2;
-        document.getElementById("metadata-vna1_type").textContent = data.vna1_type === null ? "[Not Selected]" : data.vna1_type;
-        document.getElementById("metadata-vna2_type").textContent = data.vna2_type === null ? "[Not Selected]" : data.vna2_type;
-        document.getElementById("metadata-vna1_temps").textContent = data.v1_associated === null ? "[Not Selected]" : data.v1_associated;
-        document.getElementById("metadata-vna2_temps").textContent = data.v2_associated === null ? "[Not Selected]" : data.v2_associated;
+        const metadata = {
+            "experiment_title": "metadata-title",
+            "name": "metadata-name",
+            "cpa": "metadata-cpa",
+            "date": "metadata-date",
+            "logger": "metadata-logger",
+            "temp1": "metadata-temp1",
+            "temp2": "metadata-temp2",
+            "temp3": "metadata-temp3",
+            "temp4": "metadata-temp4",
+            "vna1": "metadata-vna1",
+            "vna2": "metadata-vna2",
+            "vna1_type": "metadata-vna1-type",
+            "vna2_type": "metadata-vna2-type",
+            "v1_associated": "metadata-vna1-temps",
+            "v2_associated": "metadata-vna2-temps"
+        };
+        for (const key in metadata) {
+            const element = document.getElementById(metadata[key]);
+            element.textContent = data[key] === null ? "[Not Selected]" : data[key];
+        }
     })
-    .catch(err => console.log(err));
+    .catch(handleError);
 }
 
 function loadPorts() {
     fetch('/api/devices')
-    .then(res => res.json())
+    .then(handleResponse)
     .then(data => {
         const selector = document.getElementById("port");
-        const items = selector.length;
-        for (var i = items-1; i >= 0; i--) {
-            selector.remove(i);
-        }
-        for (const x of data) {
-            const op = new Option(x, x);
-            selector.add(op, undefined);
-        }
+        selector.innerHTML = "";
+        data.forEach(port => {
+            const op = new Option(port, port);
+            selector.add(op);
+        });
     })
-    .catch(err => console.log(err));
+    .catch(handleError);
 }
+
 
 function refresh() {
     loadPorts();
@@ -235,26 +197,25 @@ function loadConfig() {
     .then(res => res.json())
     .then(data => {
         const seconds = data.period % 60;
-        const minutes = Math.floor(data.period / 60);
-        document.getElementById('mins').value = minutes;
+        document.getElementById('mins').value = Math.floor(data.period / 60);
         document.getElementById('datarate').value = seconds;
     })
     .catch(err => console.log(err));
 }
 
 function selectScreen() {
-    loadMetadata();
-
     fetch('/api/experiment_selected')
     .then(res => res.json())
     .then(selected => {
         if (selected) {
-            var el = document.getElementById("new_experiment");
+            let el = document.getElementById("new-experiment");
             el.style.display = "none";
             el = document.getElementById("dashboard");
             el.style.display = "block";
+            // Call loadMetadata when switching to the dashboard
+            loadMetadata();
         } else {
-            var el = document.getElementById("new_experiment");
+            let el = document.getElementById("new-experiment");
             el.style.display = "block";
             el = document.getElementById("dashboard");
             el.style.display = "none";
@@ -262,12 +223,13 @@ function selectScreen() {
     });
 }
 
+
 function ExpFrmHandler(event) {
     event.preventDefault();
     // capture the form data
     const formData = new FormData(event.target);
     // convert the form data to JSON format
-    var jsonObj = Object.fromEntries(formData.entries());
+    let jsonObj = Object.fromEntries(formData.entries());
     // We want these as null, not empty string.
     if (jsonObj.vna1_temp === "") {
         jsonObj.vna1_temp = null;
@@ -287,10 +249,10 @@ function ExpFrmHandler(event) {
             method: "POST",
             body: jsonData
         })
-        .then(res => {
+        .then(() => {
             selectScreen();
         })
-        .catch(err => { 
+        .catch(()=> {
             console.log("Failed to create experiment");
         });
 }
@@ -303,10 +265,10 @@ function displayData() {
         // Create a Date object using the timestamp.
         const t = new Date(data.time * 1000);
 
-        Plotly.extendTraces('temp_plot', {x: [[t]], y: [[data.temp1]]}, [0]);
-        Plotly.extendTraces('temp_plot', {x: [[t]], y: [[data.temp2]]}, [1]);
-        Plotly.extendTraces('temp_plot', {x: [[t]], y: [[data.temp3]]}, [2]);
-        Plotly.extendTraces('temp_plot', {x: [[t]], y: [[data.temp4]]}, [3]);
+        Plotly.extendTraces('temp-plot', {x: [[t]], y: [[data.temp1]]}, [0]);
+        Plotly.extendTraces('temp-plot', {x: [[t]], y: [[data.temp2]]}, [1]);
+        Plotly.extendTraces('temp-plot', {x: [[t]], y: [[data.temp3]]}, [2]);
+        Plotly.extendTraces('temp-plot', {x: [[t]], y: [[data.temp4]]}, [3]);
     });
 }
 
@@ -326,8 +288,7 @@ function cfgRate() {
     .then(res => res.json())
     .then(data => {
         const seconds = data.period % 60;
-        const minutes = Math.floor(data.period / 60);
-        document.getElementById('mins').value = minutes;
+        document.getElementById('mins').value = Math.floor(data.period / 60);
         document.getElementById('datarate').value = seconds;
         alert("Configuration updated.");
     })
@@ -437,8 +398,8 @@ function handleTempCheckboxClick(index) {
 function init() {
     document.getElementById('date').valueAsDate = new Date();
 
-    // var experiment_selected = false;
-    var formExp = document.getElementById("create_experiment");
+    // var experiment-selected = false;
+    var formExp = document.getElementById("create-experiment");
     formExp.addEventListener("submit", ExpFrmHandler);
 
     document.getElementById("startup").addEventListener("click", start);
@@ -454,10 +415,10 @@ function init() {
     document.getElementById('vna1Checkbox').onchange = function() {
         let v1box = document.getElementById('vna1');
         v1box.disabled = !this.checked;
-        let v1select = document.getElementById("vna1_temps");
-        let vna1type = document.getElementById("vna1_type");
+        let v1select = document.getElementById("vna1-temps");
+        let vna1type = document.getElementById("vna1-type");
         vna1type.disabled = !this.checked
-        let vna1probe = document.getElementById("vna1_probes");
+        let vna1probe = document.getElementById("vna1-probes");
         if(v1box.disabled){
             v1select.style.display = "none";
             vna1probe.style.display = "none";
@@ -477,10 +438,10 @@ function init() {
     document.getElementById('vna2Checkbox').onchange = function() {
         let v2box = document.getElementById('vna2')
         v2box.disabled = !this.checked;
-        let v2select = document.getElementById("vna2_temps");
-        let vna2type = document.getElementById("vna2_type");
+        let v2select = document.getElementById("vna2-temps");
+        let vna2type = document.getElementById("vna2-type");
         vna2type.disabled = !this.checked
-        let vna2probe = document.getElementById("vna2_probes");
+        let vna2probe = document.getElementById("vna2-probes");
         if(v2box.disabled){
             v2select.style.display = "none";
             vna2probe.style.display = "none";
@@ -496,10 +457,10 @@ function init() {
             vna2probe.style.display = "flex";
         }
     };
-    document.getElementById('vna1_temps').onchange = function () {
+    document.getElementById('vna1-temps').onchange = function () {
         let v1_selections = []
-        let v1_assoc = document.getElementById('v1_associated');
-        const checkboxes = document.querySelectorAll('#vna1_temps input[type="checkbox"]');
+        let v1_assoc = document.getElementById('v1-associated');
+        const checkboxes = document.querySelectorAll('#vna1-temps input[type="checkbox"]');
         console.log(checkboxes)
         for (let i = 0, len = checkboxes.length; i < len; i++) {
             if(checkboxes[i].checked){
@@ -509,14 +470,11 @@ function init() {
             }
 
         v1_assoc.value = v1_selections
-        console.log(v1_assoc.value)
-        console.log(v1_selections)
-        console.log(v1_selections.toString())
     };
-    document.getElementById('vna2_temps').onchange = function () {
+    document.getElementById('vna2-temps').onchange = function () {
         let v2_selections = []
-        let v2_assoc = document.getElementById('v2_associated');
-        const checkboxes = document.querySelectorAll('#vna2_temps input[type="checkbox"]');
+        let v2_assoc = document.getElementById('v2-associated');
+        const checkboxes = document.querySelectorAll('#vna2-temps input[type="checkbox"]');
         console.log(checkboxes)
         for (let i = 0, len = checkboxes.length; i < len; i++) {
             if(checkboxes[i].checked){
@@ -524,8 +482,6 @@ function init() {
             }
             }
         v2_assoc.value = v2_selections
-        console.log(v2_assoc.value)
-        console.log(v2_selections)
     };
     document.getElementById('logger').onchange = function() {
         let logger = document.getElementById('logger');
@@ -555,7 +511,7 @@ function init() {
 
     };
 
-    let tempPlot = Plotly.newPlot("temp_plot", {
+Plotly.newPlot("temp-plot", {
         "data": [{
             "x": [],
             "y": [],
@@ -590,7 +546,6 @@ function init() {
         "type": "line"
     });
 
-    loadMetadata();
     loadPorts();
     loadConfig();
 
