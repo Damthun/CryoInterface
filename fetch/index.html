@@ -9,17 +9,17 @@
         <title>CryoInterface</title>
     </head>
     <body>
-        <div id="new_experiment" class="tabcontent tabstyle">
+        <div id="new-experiment" class="tabcontent tabstyle">
             <div style="width: 100%; display: flex; justify-content: center;">
-                <form id="create_experiment">
+                <form id="create-experiment">
                     <div style="width: 100%; text-align: center;">
                         <h1>Create Experiment</h1>
                     </div>
                     <div style="border-radius: 25px; border-color: #4CAF50; border-width: 3px; padding: 20px; width: 100%; border-style: solid;">
                         <h2 style="text-align: center;">Experiment Metadata</h2>
                         <p>
-                            <label for="experiment_title"><b>Experiment Title:</b></label>
-                            <input id="experiment_title" name="experiment_title" type="text" required>
+                            <label for="experiment-title"><b>Experiment Title:</b></label>
+                            <input id="experiment-title" name="experiment-title" type="text" required>
                         </p>
                         <p>
                             <label for="name"><b>User:</b></label>
@@ -97,16 +97,16 @@
                             <label for="vna1"><b>VNA 1 Sensor:</b></label>
                             <input type="checkbox" id="vna1Checkbox" />
                             <input type="text" name="vna1" id="vna1" disabled />
-                            <label for="vna1_type"><b>VNA Model:</b></label>
-                            <select name="vna1_type" id="vna1_type" disabled >
+                            <label for="vna1-type"><b>VNA Model:</b></label>
+                            <select name="vna1-type" id="vna1-type" disabled >
                                 <option value="" selected>N/A</option>
                             </select>
                         </p>
 
-                            <label for="vna1_temps" id="vna1_probes" style="display: none;"><b>Associated thermocouple(s):</b></label>
-                            <p class="assoc" id="vna1_temps">
-                                     <label for="v1_associated" style="display: none;"></label>
-                                        <input type="hidden" name="v1_associated" id="v1_associated" value="" style="display: none;">
+                            <label for="vna1-temps" id="vna1-probes" style="display: none;"><b>Associated thermocouple(s):</b></label>
+                            <p class="assoc" id="vna1-temps">
+                                     <label for="v1-associated" style="display: none;"></label>
+                                        <input type="hidden" name="v1-associated" id="v1-associated" value="" style="display: none;">
                                       <label for="v1p1"><b>1:</b></label>
                                         <input type="checkbox" id="v1p1" value="1" disabled>
 
@@ -125,17 +125,17 @@
                             <label for="vna2"><b>VNA 2 Sensor:</b></label>
                             <input type="checkbox" id="vna2Checkbox"/>
                             <input type="text" name="vna2" id="vna2" disabled />
-                            <label for="vna2_type"><b>VNA Model:</b></label>
-                            <select name="vna2_type" id="vna2_type" disabled >
+                            <label for="vna2-type"><b>VNA Model:</b></label>
+                            <select name="vna2-type" id="vna2-type" disabled >
                                 <option value="" selected>N/A</option>
                             </select>
                         </p>
 
-                            <label for="vna1_temps" id="vna2_probes" style="display: none;"><b>Associated thermocouple(s):</b></label>
-                            <p class="assoc" id="vna2_temps" >
+                            <label for="vna1-temps" id="vna2-probes" style="display: none;"><b>Associated thermocouple(s):</b></label>
+                            <p class="assoc" id="vna2-temps" >
 
-                                    <label for="v2_associated" style="display: none;"></label>
-                                        <input type="hidden" name="v2_associated" id="v2_associated" style="display: none;">
+                                    <label for="v2-associated" style="display: none;"></label>
+                                        <input type="hidden" name="v2-associated" id="v2-associated" style="display: none;">
 
                                     <label for="v2p1"><b>1:</b></label>
                                         <input type="checkbox" id="v2p1" value="1" disabled>
@@ -185,21 +185,21 @@
                 <b>Temperature 4: </b><span id="metadata-temp4"></span>
                 </div>
                 <div class="bordered">
-                <div class="vna_info">
-                    <div class="vna_name"><b>VNA 1 Sensor: </b><span id="metadata-vna1"></span></div>
+                <div class="vna-info">
+                    <div class="vna-name"><b>VNA 1 Sensor: </b><span id="metadata-vna1"></span></div>
                     <div><b>VNA 2 Sensor: </b><span id="metadata-vna2"></span></div>
                 </div>
 
-                <div class="vna_info">
-                    <div class="vna_name"><b>VNA 1 Type: </b><span id="metadata-vna1_type"></span></div>
-                    <div><b>VNA 2 Type: </b><span id="metadata-vna2_type"></span></div>
+                <div class="vna-info">
+                    <div class="vna-name"><b>VNA 1 Type: </b><span id="metadata-vna1-type"></span></div>
+                    <div><b>VNA 2 Type: </b><span id="metadata-vna2-type"></span></div>
                 </div>
                 </div>
 
                 <div class="bordered">
-                <b>VNA1 Associated Probe: </b><span id="metadata-vna1_temps"></span>
+                <b>VNA1 Associated Probe: </b><span id="metadata-vna1-temps"></span>
                 <br>
-                <b>VNA2 Associated Probe: </b><span id="metadata-vna2_temps"></span>
+                <b>VNA2 Associated Probe: </b><span id="metadata-vna2-temps"></span>
                 </div>
             </div>
             <br>
@@ -250,7 +250,7 @@
                 <button id="startup" class="button">Start Logging</button>
                 <button id="stop" class="button">Stop Logging</button>
                 <p>Click "Start Logging" to save temperature data to the temperatures.csv file and begin logging data from the VNAs.</p>
-                <div id="temp_plot"></div>
+                <div id="temp-plot"></div>
             </div>
             <br>
             <div style="border-radius: 25px; border-color: #008CBA; border-width: 3px; padding: 20px; width: 60%; border-style: solid;">

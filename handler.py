@@ -105,7 +105,7 @@ def build_response_handler(app_thread: AppThread):
                 }
                 self.send_json_response(data)
 
-            elif parsed.path == '/api/load_instruments':
+            elif parsed.path == '/api/loadInstruments':
                 instruments = self.known_instruments()
                 self.send_json_response(instruments)
             else:
@@ -462,7 +462,7 @@ def build_response_handler(app_thread: AppThread):
                 self.send_json_response('Error parsing JSON contents.', status=HTTPStatus.BAD_REQUEST)
                 return
 
-            title = metadata.get('experiment_title').replace(' ', '_')
+            title = metadata.get('experiment-title').replace(' ', '_')
             name = metadata.get('name')
             cpa = metadata.get('cpa')
             date = metadata.get('date')
@@ -492,8 +492,8 @@ def build_response_handler(app_thread: AppThread):
             optional_metatags = [
                 "logger", "temp1", "temp2",
                 "temp3", "temp4", "vna1",
-                "vna2", "vna1_type", "vna2_type",
-                "v1_associated", "v2_associated"
+                "vna2", "vna1-type", "vna2-type",
+                "v1-associated", "v2-associated"
                 ]
 
             for index, item in enumerate(optional_metatags):
