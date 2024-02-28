@@ -27,33 +27,45 @@ function updateStatus(elementId, text, color) {
 
 function handleVnaResponse(statusElementId) {
     return function (res) {
+        const state = document.getElementById(statusElementId);
         if (res.status === 200) {
-            const state = document.getElementById(statusElementId);
-            state.innerHTML = "Connected";
-            state.style.border = '2px solid green';
+            updateStatus(statusElementId, "Connected", "green");
             return res.json();
         } else {
-            const state = document.getElementById(statusElementId);
-            state.innerHTML = "Not Connected";
-            state.style.border = '2px solid red';
+            updateStatus(statusElementId, "Not Connected", "red");
             return Promise.reject("Failed to connect to VNA.");
         }
     };
 }
 
-//Main Functionalities.
-function kill() {
-    fetch('/api/kill', {
-        method: 'POST'
+function handleApiRequest(endpoint, method, requestData, callback) {
+    const json = JSON.stringify(requestData);
+    fetch(endpoint, {
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            "length": json.length.toString()
+        },
+        method: method,
+        body: json
     })
-    .then(handleResponse)
+    .then(res => {
+        if(res.status === 200){
+            callback(); // Invoke the callback function if the request is successful
+        }
+        return res.json();
+    })
     .then(data => {
-        updateStatus("dataStatus", "Stopped", "red");
         alert(data);
     })
-    .catch(handleError);
+    .catch(err => {
+        console.log(err);
+        console.log("Request failed.");
+    });
 }
 
+
+//Main Functionalities.
 function loadInstruments() {
     fetch('/api/loadInstruments')
         .then(handleResponse)
@@ -67,81 +79,53 @@ function loadInstruments() {
         .catch(handleError);
 }
 
+function kill() {
+    handleApiRequest('/api/kill', 'POST', null, () => {
+        // Callback function to update UI or handle other actions on success
+        updateStatus("dataStatus", "Experiment Ended", "red");
+    });
+}
+
+let isTakingData = sessionStorage.getItem('isTakingData') === 'true' || false;
 function start() {
-    fetch('/api/start', {
-        method: 'POST'
-    })
-    .then(handleResponse)
-    .then(data => {
+    handleApiRequest('/api/start', 'POST', null, () => {
+        // Callback function to update UI or perform other actions on success
         updateStatus("dataStatus", "Running", "green");
-        alert(data);
-    })
-    .catch(handleError);
+        sessionStorage.setItem('isTakingData', 'true');
+        isTakingData = true;
+        displayData()
+    });
 }
 
 function stop() {
-    fetch('/api/stop', {
-        method: 'POST'
-    })
-    .then(handleResponse)
-    .then(data => {
+    handleApiRequest('/api/stop', 'POST', null, () => {
+        // Callback function to update UI or perform other actions on success
         updateStatus("dataStatus", "Stopped", "red");
-        alert(data);
-    })
-    .catch(handleError);
+    });
 }
+
 function connect() {
     const port = document.getElementById("port").value;
-    const json = JSON.stringify(port);
-    fetch('/api/connect', {
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            "length": json.length.toString()
-        },
-        method: "POST",
-        body: json
-    })
-    .then(handleResponse)
-    .then(data => {
+    handleApiRequest('/api/connect', 'POST', port, () => {
+        // Callback function to update UI or perform other actions on success
         updateStatus("tempStatus", "Connected", "green");
-        alert(data);
-    })
-    .catch(handleError);
+    });
 }
 
 function connectVNA1() {
-    const port = document.getElementById("vna1IP").value;
-    const json = JSON.stringify(port);
-    fetch('/api/connect_vna1', {
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            "length": json.length.toString()
-        },
-        method: "POST",
-        body: json
-    })
-    .then(handleVnaResponse("vna1status"))
-    .then(data => alert(data))
-    .catch(handleError);
+    const host = document.getElementById("vna1IP").value; // Assuming there's an input field with id "vna1Host"
+    handleApiRequest('/api/connect_vna1', 'POST', host, () => {
+        // Callback function to update UI or perform other actions on success
+        updateStatus("vna1Status", "Connected", "green");
+    });
 }
 
 function connectVNA2() {
-    const port = document.getElementById("vna2IP").value;
-    const json = JSON.stringify(port);
-    fetch('/api/connect_vna2', {
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            "length": json.length.toString()
-        },
-        method: "POST",
-        body: json
-    })
-    .then(handleVnaResponse("vna2status"))
-    .then(data => alert(data))
-    .catch(handleError);
+    const host = document.getElementById("vna2IP").value; // Assuming there's an input field with id "vna2Host"
+    handleApiRequest('/api/connect_vna2', 'POST', host, () => {
+        // Callback function to update UI or perform other actions on success
+        updateStatus("vna2Status", "Connected", "green");
+    });
 }
 
 function loadMetadata() {
@@ -258,22 +242,26 @@ function ExpFrmHandler(event) {
 }
 
 function displayData() {
-    var evtSource = new EventSource("api/stream_data");
-    evtSource.addEventListener('temperature', (event) => {
-        const data = JSON.parse(event.data);
-        
-        // Create a Date object using the timestamp.
-        const t = new Date(data.time * 1000);
+    // Only display data if we are taking data
+    if (isTakingData) {
+        console.log('GEEEEE')
+        let evtSource = new EventSource("api/stream_data");
+        evtSource.addEventListener('temperature', (event) => {
+            const data = JSON.parse(event.data);
 
-        Plotly.extendTraces('temp-plot', {x: [[t]], y: [[data.temp1]]}, [0]);
-        Plotly.extendTraces('temp-plot', {x: [[t]], y: [[data.temp2]]}, [1]);
-        Plotly.extendTraces('temp-plot', {x: [[t]], y: [[data.temp3]]}, [2]);
-        Plotly.extendTraces('temp-plot', {x: [[t]], y: [[data.temp4]]}, [3]);
-    });
+            // Create a Date object using the timestamp.
+            const t = new Date(data.time * 1000);
+
+            Plotly.extendTraces('temp-plot', {x: [[t]], y: [[data.temp1]]}, [0]);
+            Plotly.extendTraces('temp-plot', {x: [[t]], y: [[data.temp2]]}, [1]);
+            Plotly.extendTraces('temp-plot', {x: [[t]], y: [[data.temp3]]}, [2]);
+            Plotly.extendTraces('temp-plot', {x: [[t]], y: [[data.temp4]]}, [3]);
+        });
+    }
 }
 
 function cfgRate() {
-    var cfgJSON = {
+    let cfgJSON = {
         "period": getPeriodSeconds(),
     };
     fetch('/api/config', {
@@ -305,68 +293,22 @@ function getPeriodSeconds() {
     return (mins*60)+sec;
 }
 
-var prev_data = null;
+let prev_data = null;
 
 function checkStatus() {
     fetch('/api/devices_connected')
-    .then(res =>{
-        return res.json();
-    })
-    .then(data =>{
-        if (data.temperature) {
-            const state = document.getElementById("tempStatus");
-            state.innerHTML = "Connected";
-            state.style.border = '2px solid green';
-        } else {
-            const state = document.getElementById("tempStatus");
-            state.innerHTML = "Not Connected";
-            state.style.border = '2px solid red';
-            if (prev_data?.temperature) {
-                alert("Temperature sensor has disconnected.");
-            }
-        }
-
-        if (data.vna1) {
-            const state = document.getElementById("vna1status");
-            state.innerHTML = "Connected";
-            state.style.border = '2px solid green';
-        } else {
-            const state = document.getElementById("vna1status");
-            state.innerHTML = "Not Connected";
-            state.style.border = '2px solid red';
-            if (prev_data?.vna1) {
-                alert("VNA1 has disconnected.");
-            }
-        }
-
-        if (data.vna2) {
-            const state = document.getElementById("vna2status");
-            state.innerHTML = "Connected";
-            state.style.border = '2px solid green';
-        } else {
-            const state = document.getElementById("vna2status");
-            state.innerHTML = "Not Connected";
-            state.style.border = '2px solid red';
-            if (prev_data?.vna2) {
-                alert("VNA2 has disconnected.");
-            }
-        }
-
+    .then(res => res.json())
+    .then(data => {
+        updateStatus("tempStatus", data.temperature ? "Connected" : "Not Connected", data.temperature ? "green" : "red");
+        updateStatus("vna1status", data.vna1 ? "Connected" : "Not Connected", data.vna1 ? "green" : "red");
+        updateStatus("vna2status", data.vna2 ? "Connected" : "Not Connected", data.vna2 ? "green" : "red");
         prev_data = data;
     });
 
     fetch('/api/running')
     .then(res => res.json())
     .then(data => {
-        if (data) {
-            const state = document.getElementById("dataStatus");
-            state.innerHTML = "Running";
-            state.style.border = '2px solid green';
-        } else {
-            const state = document.getElementById("dataStatus");
-            state.innerHTML = "Stopped";
-            state.style.border = '2px solid red';
-        }
+        updateStatus("dataStatus", data ? "Running" : "Stopped", data ? "green" : "red");
     })
     .catch(err => console.log(err));
 }
@@ -397,9 +339,10 @@ function handleTempCheckboxClick(index) {
 
 function init() {
     document.getElementById('date').valueAsDate = new Date();
+    isTakingData = sessionStorage.getItem('isTakingData') === 'true' || false;
+    displayData()
 
-    // var experiment-selected = false;
-    var formExp = document.getElementById("create-experiment");
+    let formExp = document.getElementById("create-experiment");
     formExp.addEventListener("submit", ExpFrmHandler);
 
     document.getElementById("startup").addEventListener("click", start);
@@ -511,7 +454,7 @@ function init() {
 
     };
 
-Plotly.newPlot("temp-plot", {
+    Plotly.newPlot("temp-plot", {
         "data": [{
             "x": [],
             "y": [],
@@ -547,12 +490,9 @@ Plotly.newPlot("temp-plot", {
     });
 
     loadPorts();
+
     loadConfig();
-
-    displayData();
-
     selectScreen();
-
     checkStatus();
 
     setInterval(checkStatus, 10000);
