@@ -56,24 +56,20 @@ def build_response_handler(app_thread: AppThread):
             # Serve this request depending on the requested path.
             if parsed.path in ['/', '/index', '/index.html']:
                 self.send_file_response(resource_path('fetch/index.html'))
+            elif parsed.path == '/home':
+                self.send_file_response(resource_path('fetch/home.html'))
             elif parsed.path == '/index.js':
                 self.send_file_response(resource_path('fetch/index.js'), 'application/javascript')
             elif parsed.path == '/index.css':
                 self.send_file_response(resource_path('fetch/index.css'), 'text/css')
+            elif parsed.path == '/Transmission_Wires.jpg':
+                self.send_image_response(resource_path('fetch/Transmission_Wires.jpg'), 'image/jpeg')
             elif parsed.path == '/plotly-2.19.1.min.js':
                 self.send_file_response(resource_path('fetch/plotly-2.19.1.min.js'), content_type='application/javascript')
             elif parsed.path == '/favicon-16x16.png':
-                self.send_response(HTTPStatus.OK)
-                self.send_header('Content-Type', 'image/png')
-                self.end_headers()
-                with open(resource_path('fetch/favicon-16x16.png'), 'rb') as f:
-                    self.wfile.write(f.read())
+                self.send_image_response(resource_path('fetch/favicon-16x16.png'), 'image/png')
             elif parsed.path == '/favicon-32x32.png':
-                self.send_response(HTTPStatus.OK)
-                self.send_header('Content-Type', 'image/png')
-                self.end_headers()
-                with open(resource_path('fetch/favicon-32x32.png'), 'rb') as f:
-                    self.wfile.write(f.read())
+                self.send_image_response(resource_path('fetch/favicon-32x32.png'), 'image/png')
             elif parsed.path == '/api/metadata':
                 self.send_response(HTTPStatus.OK)
                 self.send_header('Content-type', 'application/json')
@@ -168,6 +164,23 @@ def build_response_handler(app_thread: AppThread):
             self.send_header('Content-type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps(data).encode('utf-8'))
+
+        def send_image_response(self, path: str, content_type='image/jpeg') -> None:
+            """
+            Respond with the contents of the image file at the provided path.
+
+            :param path: Path of the image file to be read.
+            :param content_type: Content type of the image file, defaults to 'image/jpeg'
+            """
+            try:
+                with open(path, 'rb') as f:
+                    self.send_response(HTTPStatus.OK)
+                    self.send_header('Content-Type', content_type)
+                    self.end_headers()
+                    self.wfile.write(f.read())  # Write binary data directly
+            except FileNotFoundError:
+                self.send_response(HTTPStatus.NOT_FOUND)
+                self.end_headers()
 
         def stream_data(self) -> None:
             """
