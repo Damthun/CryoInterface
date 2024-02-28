@@ -24,10 +24,22 @@ Note: The application has been tested using Python 3.9. Python 3.5 or newer is r
 
 Access the GUI by going to `localhost:4951` in your web browser.
 
+## Package as .exe
+I've found that one can use PyInstaller to package the program using this statement.
+the non-py files/folders must be explicitly stated within the packaging statement.
+"python -m PyInstaller --onefile --icon='cryo.ico' --add-data='Instruments;Instruments' --add-data='Fetch;Fetch' main.py"
+
+
 ## Application
 
 File structure:
 ```
+|- fetch/
+   |- index.js
+   |- index.css
+   |- index.html
+   |- plotly-2.19.1.min.js
+   ...
 |- app_thread.py
 |- config.py
 |- handler.py
@@ -35,10 +47,13 @@ File structure:
 |- metadata.py
 |- utils.py
 |- vna.py
+|- vna_funcs.py
+|- cryo.ico
 |- experiments/
    |- name_cpa_date/
    ...
 ```
+
 
 **app_thread.py**
 
@@ -128,7 +143,7 @@ Signal to the application to begin collecting data.
 
 **POST /api/stop**
 
-Signal to the application to stop collecting data.
+Signal to the application to pause data collection thread.
 
 **POST /api/create_experiment**
 
@@ -151,5 +166,11 @@ Connect to the VNA with the specified IP address.
 **POST /api/connect_vna2**
 
 Connect to the VNA with the specified IP address.
+
+`send:` IP address as a string.
+
+**POST /api/kill**
+
+attempts to stop app_thread.
 
 `send:` IP address as a string.
