@@ -212,7 +212,7 @@ class AppThread(Thread):
 
                                     except serial.serialutil.SerialException:
                                         msg = 'Encountered an error while communicating with the ESP32.' \
-                                            'Closing connection.'
+                                            '  Closing connection.'
                                         logging.exception(msg)
                                         try:
                                             self.con.close()
@@ -303,6 +303,7 @@ class AppThread(Thread):
             # Read until the newline character, decode to utf-8,
             # and remove the ending newline character.
             data = self.con.readline().decode('utf-8').rstrip()
+            print(data)
             # Get temperatures from the string.
             temp1, temp2 = [float(x) for x in data.split(',')]
             # Assign values to dictionary.
