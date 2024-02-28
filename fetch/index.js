@@ -244,7 +244,6 @@ function ExpFrmHandler(event) {
 function displayData() {
     // Only display data if we are taking data
     if (isTakingData) {
-        console.log('GEEEEE')
         let evtSource = new EventSource("api/stream_data");
         evtSource.addEventListener('temperature', (event) => {
             const data = JSON.parse(event.data);
@@ -473,8 +472,8 @@ function init() {
             "name": "Temp 4",
         }],
         "layout": {
-            "width": 800,
-            "height": 500,
+            "width": 600,
+            "height": 400,
             "xaxis": {
                 "title": {
                     "text": "Time",
