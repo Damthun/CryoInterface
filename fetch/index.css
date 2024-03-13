@@ -66,29 +66,25 @@ display: none;
 }
 .bordered {
     margin-bottom: 5px;
-    border-color: #008CBA;
     border-radius: 2px;
     border-width: 1px;
     padding: 5px;
     border-style: solid;
 }
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #f4f4f4;
-        }
 
-        .container {
-            border-radius: 25px;
-            border: 3px solid #008CBA;
-            padding: 20px;
-            width: 60%;
-            margin: 50px auto;
-            background-color: #fff;
-        }
+.container {
+    width: 90%; /* Adjust as needed */
+    height: 400px; /* Adjust as needed */
+    border-radius: 5px;
+    border: 3px solid #008CBA;
+    padding: 20px;
+    margin: 10px auto;
+    background-color: #fff;
+}
 
-        h2 {
-            color: #008CBA;
-        }
+h2 {
+    color: #008CBA;
+}
 body {
     margin: 0;
     padding: 0;
@@ -112,6 +108,35 @@ body {
     border: 2px solid red;
 }
 
+/* Flex container for image-container and image-list */
+.flex-container {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+}
 
+/* Style for image-container */
+#image-container {
+    flex: 4; /* Take 80% of container width */
+    overflow: hidden; /* Hide overflowing content */
+    margin-right: 10px;
+}
 
+/* Style for image-list */
+#image-list {
+    flex: 1; /* Take 20% of container width */
+    overflow-y: auto; /* Enable vertical scrolling */
+    display: flex; /* Use flexbox layout for buttons */
+    flex-direction: column; /* Arrange buttons vertically */
+    align-items: center; /* Center buttons horizontally */
+}
 
+/* Subclass for buttons within image-list */
+#image-list .button {
+    width: 90%; /* Set the width to 90% */
+    margin: 5px; /* Add some margin */
+}
+img {
+    width: 100%; /* or any custom size */
+    height: 100%;
+}
