@@ -15,7 +15,7 @@ import serial
 
 from config import Config
 from metadata import Metadata
-from vna_funcs import ping_vna, vna_csv, vna_s2p
+from vna_funcs import ping_vna, vna_csv, vna_s2p, vna_png
 
 
 class AppThread(Thread):
@@ -51,12 +51,16 @@ class AppThread(Thread):
         # Variables to store VNA type, Will Help with SCPI
         self.vna_type1: Optional[str] = None
         self.vna_type2: Optional[str] = None
+
         # Temperature data collected by the experiment. Appended with each sampling.
-        self.data = []
+        self.temp_data = []
+        self.image_data = []
 
         # Collection of queues used for data streaming.
-        self.queue_pool: List[queue.Queue] = []
+        self.temperature_queue_pool: List[queue.Queue] = []
+        self.image_queue_pool: List[queue.Queue] = []
 
+        self.displayed_image: Optional[str] = None
         # Directory to store data in.
         self.dir: Optional[str] = None
 
@@ -64,6 +68,7 @@ class AppThread(Thread):
         self.killed = False
         self.possible_temps: Optional[list] = None
         self.known_devices: Optional[dict] = {}
+
 
     def run(self):
         """
@@ -78,6 +83,7 @@ class AppThread(Thread):
                 self.possible_temps = [self.metadata.temp1, self.metadata.temp2,
                                        self.metadata.temp3, self.metadata.temp4]
                 path = os.path.join('experiments', self.dir, 'temperatures.csv')
+                image_path = os.path.join('experiments', self.dir, 'images')
                 # Open the file for saving temperature data, a+ for writing and updating.
                 with open(path, 'a+', encoding='utf-8') as wf:
                     # We loop here so check again if the experiment is running and the
@@ -87,15 +93,21 @@ class AppThread(Thread):
                         retry = False
                         # Get the current time.
                         t = time.time()
-
+                        image_info = {"time": t}
+                        dt = datetime.fromtimestamp(t)
+                        name = f"{dt.year}_{dt.month:02d}_{dt.day:02d}_{dt.hour:02d}_{dt.minute:02d}_{dt.second:02d}"
+                        image_stamp = f'{dt.hour:02d}_{dt.minute:02d}_{dt.second:02d}'  # Timestamp for dict.
+                        image_info['display'] = image_stamp
                         # If we have a USB connection; Auxiliary sensor data gathering.
                         if self.con:
                             try:
                                 # Use function to grab dictionary containing selected temps.
                                 readings = self._read_sensor_data(self.metadata.logger)
-
+                                # Write H:M:S timestamp for readability.
+                                wf.write(image_stamp)
                                 # Write Time information to file.
-                                wf.write(f'{t}')
+                                wf.write(f',{t}')
+
                                 # For each auxiliary data, write to file.
                                 for key in readings:
                                     wf.write(f',{readings[key]}')
@@ -107,14 +119,14 @@ class AppThread(Thread):
                                 readings['time'] = t
 
                                 # Store data points in memory.
-                                self.data.append(readings)
+                                self.temp_data.append(readings)
                                 # Write to the CSV file.
 
                                 # Keep last reading, functions much like tic, toc.
                                 last_reading = t
 
                                 # Send data to every queue in the pool.
-                                for q in self.queue_pool:
+                                for q in self.temperature_queue_pool:
                                     q.put(readings)
 
                             except serial.serialutil.SerialException:
@@ -133,9 +145,6 @@ class AppThread(Thread):
                         if self.vna_con1:
                             print('VNA1')
                             try:
-                                dt = datetime.fromtimestamp(t)
-                                name = f"{dt.year}_{dt.month:02d}_{dt.day:02d}_{dt.hour:02d}_{dt.minute:02d}_{dt.second:02d}"
-
                                 f_name = f"{name}_{self.metadata.vna1_type}_vna1.csv"
                                 fpath = os.path.join('experiments', self.dir, f_name)
 
@@ -150,7 +159,13 @@ class AppThread(Thread):
                                 if not result:
                                     retry = True
                                     continue
-
+                                image_name = f'{image_stamp}_{self.metadata.vna1_type}_vna1.png'
+                                fpath = os.path.join(image_path, image_name)
+                                result = vna_png(self.vna_con1, fpath, self.known_devices[self.metadata.vna1_type])
+                                image_info['vna1'] = fpath
+                                if not result:
+                                    retry = True
+                                    continue
                             except:
                                 logging.exception('Error.')
                                 try:
@@ -163,10 +178,6 @@ class AppThread(Thread):
                         if self.vna_con2:
                             print('VNA2')
                             try:
-
-                                dt = datetime.fromtimestamp(t)
-
-                                name = f"{dt.year}_{dt.month:02d}_{dt.day:02d}_{dt.hour:02d}_{dt.minute:02d}_{dt.second:02d}"
 
                                 f_name = f"{name}_{self.metadata.vna2_type}_vna2.csv"
                                 fpath = os.path.join('experiments', self.dir, f_name)
@@ -182,6 +193,14 @@ class AppThread(Thread):
                                 if not result:
                                     retry = True
                                     continue
+
+                                image_name = f'{image_stamp}_{self.metadata.vna2_type}_vna2.png'
+                                fpath = os.path.join(image_path, image_name)
+                                result = vna_png(self.vna_con1, fpath, self.known_devices[self.metadata.vna2_type])
+                                image_info['vna2'] = fpath
+                                if not result:
+                                    retry = True
+                                    continue
                             except:
                                 logging.exception('Error.')
                                 try:
@@ -189,7 +208,8 @@ class AppThread(Thread):
                                 except:
                                     logging.exception('Error closing connection.')
                                 self.vna_con2 = None
-
+                        for item in self.image_queue_pool:
+                            item.put(image_info)
                         if not retry:
                             # Sleep until it's time to collect the next data point.
                             start_time = t
@@ -201,13 +221,11 @@ class AppThread(Thread):
                                         readings = self._read_sensor_data(self.metadata.logger)
                                         readings['time'] = t
 
-
-
                                         # Store data points in memory.
-                                        self.data.append(readings)
+                                        self.temp_data.append(readings)
 
                                         # Send data to every queue in the pool.
-                                        for q in self.queue_pool:
+                                        for q in self.temperature_queue_pool:
                                             q.put(readings)
 
                                     except serial.serialutil.SerialException:
@@ -219,6 +237,7 @@ class AppThread(Thread):
                                         except:
                                             logging.exception('Error closing connection.')
                                         self.con = None
+
                                     except:
                                         logging.exception('Exception encountered in app thread.')
 
@@ -236,7 +255,6 @@ class AppThread(Thread):
 
                                 # Sleep to avoid wasting CPU resources.
                                 time.sleep(0.001)
-
             while not self.running and not self.killed:
                 t = time.time()
                 if self.con and t >= last_reading + 15:
@@ -254,22 +272,23 @@ class AppThread(Thread):
                 # Sleep to avoid wasting CPU resources.
                 time.sleep(0.001)
 
-    def get_queue(self) -> queue.Queue:
+    def get_queue(self, queue_pool, data_list) -> queue.Queue:
         """
         Get a new queue for the data stream.
 
+        :param queue_pool: Type of queue pool ('temperature' or 'image').
+        :param data_list: what's storing the data.
         :return: A queue containing all data up to this point.
         """
         # Create a new queue.
         q = queue.Queue()
 
         # Add previous data to the queue.
-        for item in self.data:
+        for item in data_list:
             q.put(item)
 
-        # Add the queue to the queue pool.
-        self.queue_pool.append(q)
-
+        # Add the queue to the appropriate queue pool.
+        queue_pool.append(q)
         return q
 
     def stop(self):
