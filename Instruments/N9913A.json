@@ -3,5 +3,6 @@
     "Termination": "\n",
     "Save_csv": "MMEM:STOR:FDAT",
     "Save_snp": "MMEM:STOR:SNP",
+    "Save_png": "MMEM:STOR:IMAG:NoKeys",
     "Grab_file": "MMEM:DATA"
 }
