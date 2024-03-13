@@ -12,7 +12,7 @@ def ping_vna(s: socket.socket) -> bool:
         # Ask the VNA to identify itself.
         send_cmd(s, cmd='*IDN?\n')
         # Read the response back.
-        recv = s.recv(255)
+        s.recv(255)
         return True
     except:
         logging.exception('Error.')
@@ -98,6 +98,40 @@ def vna_csv(s: socket.socket, fpath: str, vna_info) -> bool:
         else:
             time.sleep(10)
             print('Trying again...')
+            continue
+
+    print('Transfer Failed...')
+    return False
+
+def vna_png(s: socket.socket, fpath: str, vna_info) -> bool:
+    """
+    Collect png from VNA.
+    :return: True if received # bytes is within 30 of expected, False otherwise.
+    """
+    termination_character = vna_info['Termination']
+    save_png_command = vna_info['Save_png']
+    file_transfer_command = vna_info['Grab_file']
+
+    # Save the current screen (NOTE: Ensure main menu screen is active)
+    send_cmd(s, cmd=f'{save_png_command} "CryointP.png"{termination_character}')
+    # Loop not neccessary, remnants from initial launch when data transfer was inconsistent.
+    for _ in range(1):
+        # Data transfer command from device to host is MMEM:DATA/MMEM:TRAN ? is a query.
+        send_cmd(s, cmd=f'{file_transfer_command}? "CryointP.png"{termination_character}')
+        print(f'Sent command: {file_transfer_command}? "CryointP.png"{termination_character}')
+        numbytes, png_data = receive_bytes(s)
+
+        # Open and create png file in binary-write mode and saving as is.
+        with open(fpath, 'wb') as png_wf:
+            png_wf.write(png_data)
+        # Ensure the expected and received values are essentially the same.
+        if abs(int(numbytes) - len(png_data)) < 30:
+            print('Success!')
+            return True
+        # Sleep if transfer has failed.
+        else:
+            time.sleep(10)
+            print('Trying again..')
             continue
 
     print('Transfer Failed...')
