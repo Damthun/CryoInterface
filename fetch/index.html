@@ -46,7 +46,7 @@
                         <li>Check the box to select sensor(s) for this experiment.</li>
                         <li>Once selected, use the text box to name the sensor. (ex: "top", "bottom")</li>
                     </ul>
-                </p>
+
                 <p>
                     <label for="logger"><b>Logger:</b></label>
                     <select name="logger" id="logger">
@@ -237,8 +237,23 @@
                 <button id="startup" class="button">Start Logging</button>
                 <button id="stop" class="button">Stop Logging</button>
                 <p>Click "Start Logging" to save temperature data to the temperatures.csv file and begin logging data from the VNAs.</p>
-                <div id="temp-plot"></div>
+                <div id="temp-plot" class="container"></div>
             </div>
+            <div class="section">
+                <h2>Temperature Images</h2>
+                <div class="flex-container">
+                    <div class="bordered container" id="image-container">
+                    </div>
+                    <div class="bordered container" id="image-list" >
+
+                    </div>
+                </div>
+                <div id="image-navigation">
+                    <button id="vna1-image" class="button">VNA 1</button>
+                    <button id="vna2-image" class="button">VNA 2</button>
+                </div>
+            </div>
+
             <div class="section">
                 <h2>Shutting Down</h2>
                 <p>To close the program and end the experiment, Please click the button below, This will stop any data collections and connections.</p>

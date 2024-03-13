@@ -282,7 +282,7 @@ function checkStatus() {
     fetch('/api/devices_connected')
     .then(res => res.json())
     .then(data => {
-        updateStatus("tempstatus", data.temperature ? "Connected" : "Not Connected", data.temperature ? "green" : "red");
+        updateStatus("tempStatus", data.temperature ? "Connected" : "Not Connected", data.temperature ? "green" : "red");
         updateStatus("vna1status", data.vna1 ? "Connected" : "Not Connected", data.vna1 ? "green" : "red");
         updateStatus("vna2status", data.vna2 ? "Connected" : "Not Connected", data.vna2 ? "green" : "red");
         prev_data = data;
@@ -336,7 +336,7 @@ function connect() {
     const port = document.getElementById("port").value;
     handleApiRequest('/api/connect', 'POST', port, () => {
         // Callback function to update UI or perform other actions on success
-        updateStatus("tempstatus", "Connected", "green");
+        updateStatus("tempStatus", "Connected", "green");
         alert("Successfully connected to logger.");
     });
 }
