@@ -83,8 +83,10 @@ def build_response_handler(app_thread: AppThread):
             elif parsed.path == '/api/devices':
                 devices = find_available_devices()
                 self.send_json_response(devices)
-            elif parsed.path == '/api/stream_data':
-                self.stream_data()
+            elif parsed.path == '/api/stream_readings':
+                self.stream_data(app_thread.temperature_queue_pool, 'temperature', app_thread.temp_data)
+            elif parsed.path == '/api/stream_images':
+                self.stream_data(app_thread.image_queue_pool, 'image_info', app_thread.image_data)
             elif parsed.path == '/api/running':
                 self.send_json_response(app_thread.running)
             elif parsed.path == '/api/previous_experiments':
@@ -93,7 +95,7 @@ def build_response_handler(app_thread: AppThread):
                 self.send_json_response(app_thread.experiment_selected)
             elif parsed.path == '/api/devices_connected':
                 # these checks are not perfect
-                # a failure in the appthread has to occur for the connection to be set to None
+                # a failure in the app_thread has to occur for the connection to be set to None
                 data = {
                     'temperature': (app_thread.con is not None),
                     'vna1': (app_thread.vna_con1 is not None),
@@ -104,6 +106,13 @@ def build_response_handler(app_thread: AppThread):
             elif parsed.path == '/api/loadInstruments':
                 instruments = self.known_instruments()
                 self.send_json_response(instruments)
+                app_thread.known_devices = instruments
+
+            elif parsed.path == '/api/loadImage':
+                try:
+                    self.send_image_response(resource_path(app_thread.displayed_image), 'image/png')
+                except TypeError:
+                    pass
             else:
                 self.send_response_only(HTTPStatus.NOT_FOUND)
                 self.end_headers()
@@ -135,7 +144,8 @@ def build_response_handler(app_thread: AppThread):
             elif parsed.path == '/api/kill':
                 self.send_json_response('Experiment Data Collection Ended Successfully', status=HTTPStatus.OK)
                 app_thread.stop()
-
+            elif parsed.path == '/api/get_photo':
+                self.receive_photo_path()
             else:
                 self.send_response_only(HTTPStatus.NOT_FOUND)
                 self.end_headers()
@@ -182,7 +192,7 @@ def build_response_handler(app_thread: AppThread):
                 self.send_response(HTTPStatus.NOT_FOUND)
                 self.end_headers()
 
-        def stream_data(self) -> None:
+        def stream_data(self, queue_pool, data_type: str, data_holder) -> None:
             """
             Send a stream of JSON events for the temperature data until the connection is closed.
             """
@@ -192,7 +202,8 @@ def build_response_handler(app_thread: AppThread):
                 self.end_headers()
 
                 # Get a queue from the app thread for the temperature data.
-                queue = app_thread.get_queue()
+
+                queue = app_thread.get_queue(queue_pool, data_holder)
 
                 try:
                     # Run until the connection is closed.
@@ -200,12 +211,12 @@ def build_response_handler(app_thread: AppThread):
                         # Block until data is available.
                         data: Dict = queue.get()
                         # String formatted for event.
-                        s = 'event: temperature\ndata: ' + json.dumps(data) + '\n\n'
+                        s = f'event: {data_type}\ndata: ' + json.dumps(data) + '\n\n'
                         # Write to stream.
                         self.wfile.write(s.encode('utf-8'))
                 except:
                     # An exception occurred and the connection is closed, remove the queue from the pool.
-                    app_thread.queue_pool.remove(queue)
+                    queue_pool.remove(queue)
                     logging.exception('An error occurred while serving stream data.')
 
         def update_config(self) -> None:
@@ -489,7 +500,8 @@ def build_response_handler(app_thread: AppThread):
 
             try:
                 # Attempt to create the directory for storing experimental data.
-                os.makedirs(os.path.join('experiments', directory))
+                exp_folder = os.path.join('experiments', directory)
+                os.makedirs(exp_folder)
             except FileExistsError:
                 # If the directory already exists log a warning and exit.
                 msg = 'The requested directory already exists.'
@@ -536,8 +548,20 @@ def build_response_handler(app_thread: AppThread):
             app_thread.experiment_selected = True
 
             self.save_metadata()
-            self.send_response_only(HTTPStatus.OK)
+            if app_thread.metadata.vna1 or app_thread.metadata.vna2:
+                os.makedirs(os.path.join(exp_folder, 'images'))
+            # Construct the response data
+            response_data = {
+                "success": True,
+                "message": "Experiment created successfully",
+                "experiment_directory": directory
+            }
+
+            # Send the JSON response
+            self.send_response(HTTPStatus.OK)
+            self.send_header('Content-type', 'application/json')
             self.end_headers()
+            self.wfile.write(json.dumps(response_data).encode('utf-8'))
 
         def save_metadata(self) -> bool:
             """
@@ -591,4 +615,26 @@ def build_response_handler(app_thread: AppThread):
                             known_devices_dict[model] = json_data
                     except json.JSONDecodeError as e:
                         print(f"Error decoding JSON in file {file_path}: {e}")
+
+        def receive_photo_path(self):
+            try:
+                length = int(self.headers.get('Content-Length'))
+            except TypeError:
+                self.send_json_response("'Content-Length' header not provided.", status=HTTPStatus.BAD_REQUEST)
+                return
+
+            # Read the request body, decode it, and load it as JSON.
+            try:
+                content = self.rfile.read(length).decode('utf-8')
+                data = json.loads(content)
+                print(data)
+                photo_url = data.get('photoUrl')
+            except Exception as e:
+                self.send_json_response(f'Error processing request body: {str(e)}', status=HTTPStatus.BAD_REQUEST)
+                return
+
+            # Handle the photo URL, for example, you can print it or store it.
+            app_thread.displayed_image = photo_url
+            # Send a response indicating success.
+            self.send_json_response({'message': 'Photo URL received successfully.'}, status=HTTPStatus.OK)
     return ResponseHandler
