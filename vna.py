@@ -9,7 +9,6 @@ def build_cmd(cmd: str) -> bytes:
     :paramcmd: The command you'd like to send.
     :return: the command as a string.
     """
-    cmd = cmd
     return cmd.encode('utf-8')
 
 
@@ -19,9 +18,7 @@ def send_cmd(s: socket.socket, cmd: str):
     :param cmd: the command you'd like to send.
     bytes_sent: uses socket.sendall to ensure all bytes are sent
     """
-    cmd = cmd.encode('utf-8')
-    bytes_sent = s.sendall(cmd)
-    return
+    s.sendall(build_cmd(cmd))
 
 
 def receive_bytes(s: socket.socket):
