@@ -1,14 +1,10 @@
 # Multi-Sensor Platform for Monitoring Cryoprotective Agents (CPAs)
+# Version 3.2.0.
 
 
+Project Advisor: Professor Rhonda Franklin
 
-**Project Advisor:** Professor Rhonda Franklin
-
-** V1 Design Students:**
-* Aditya Prabhu
-* Brett Duncan
-* Jack Sellner
-* Luke Lundell
+V1 Design Students: Aditya Prabhu, Brett Duncan, Jack Sellner, Luke Lundell
 
 ## Setup
 
@@ -20,12 +16,12 @@ Install required Python packages:
 
 `python main.py`
 
-Note: The application has been tested using Python 3.9. Python 3.5 or newer is required.
+Note: The application has been tested using Python 3.9 and 3.10. Python 3.5 or newer is required.
 
 Access the GUI by going to `localhost:4951` in your web browser.
 
 ## Package as .exe
-I've found that one can use PyInstaller to package the program using this statement.
+One can package the platform using pyInstaller.
 the non-py files/folders must be explicitly stated within the packaging statement.
 "python -m PyInstaller --onefile --icon='cryo.ico' --add-data='Instruments;Instruments' --add-data='Fetch;Fetch' main.py"
 
@@ -34,6 +30,7 @@ the non-py files/folders must be explicitly stated within the packaging statemen
 
 File structure:
 ```
+|- Instruments
 |- fetch/
    |- index.js
    |- index.css
@@ -50,6 +47,8 @@ File structure:
 |- vna_funcs.py
 |- cryo.ico
 |- experiments/
+   |- Images/
+      |- time_vna.png
    |- name_cpa_date/
    ...
 ```
@@ -105,9 +104,15 @@ Detect available USB devices.
 
 `returns:` JSON list of ports that have available USB devices.
 
-**GET /api/stream_data**
+**GET /api/stream_readings**
 
-Send all data to the client and stream it as it becomes available.
+Send all logger data to the client and stream it as it becomes available.
+
+`returns:` Stream of JSON events.
+
+**GET /api/stream_images**
+
+Send all image info to the client and stream it as it becomes available.
 
 `returns:` Stream of JSON events.
 
@@ -128,6 +133,22 @@ Get a list of previous experiments.
 Whether or not the user has selected an experiment.
 
 `returns:` `true` if an experiment has been selected, `false` otherwise.
+
+**GET /api/devices_connected**
+
+Whether a device is currently connected.
+
+`returns:` JSON list containing boolean status of devices connected/active.
+
+**GET /api/loadInstruments**
+
+Loads JSON files within Instruments directory. 
+
+`returns:` Dictionary containing test equipment information.
+
+**GET /api/loadImage**
+
+Sends response to client for snapshot of test equipment.
 
 ### POST
 
@@ -174,3 +195,10 @@ Connect to the VNA with the specified IP address.
 attempts to stop app_thread.
 
 `send:` IP address as a string.
+
+**POST /api/get_photo**
+
+grab desired photo URL from client 
+
+`send:` Photo URL as path.
+
