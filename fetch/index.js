@@ -247,7 +247,7 @@ function storeButtonData(buttonData) {
     let storedButtons = JSON.parse(sessionStorage.getItem("storedButtons")) || [];
     // Add the new button data to the array
     storedButtons.push(buttonData);
-    // Store the updated array back to localStorage
+    // Store the updated array back to sessionStorage
     sessionStorage.setItem("storedButtons", JSON.stringify(storedButtons));
 }
 
@@ -347,7 +347,6 @@ function connectVNA1() {
         // Callback function to update UI or perform other actions on success
         updateStatus("vna1status", "Connected", "green");
         alert("Successfully connected to VNA.");
-
     });
 }
 // Connects VNA instrument.
@@ -355,9 +354,8 @@ function connectVNA2() {
     const host = document.getElementById("vna2IP").value; // Assuming there's an input field with id "vna2Host"
     handleApiRequest('/api/connect_vna2', 'POST', host, () => {
         // Callback function to update UI or perform other actions on success
-        updateStatus("vna2Status", "Connected", "green");
+        updateStatus("vna2status", "Connected", "green");
         alert("Successfully connected to VNA.");
-
     });
 }
 // Changes configuration of data collection based on user input.

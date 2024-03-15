@@ -104,7 +104,7 @@ class AppThread(Thread):
                                 # Use function to grab dictionary containing selected temps.
                                 readings = self._read_sensor_data(self.metadata.logger)
                                 # Write H:M:S timestamp for readability.
-                                wf.write(image_stamp)
+                                wf.write(name)
                                 # Write Time information to file.
                                 wf.write(f',{t}')
 
@@ -196,7 +196,7 @@ class AppThread(Thread):
 
                                 image_name = f'{image_stamp}_{self.metadata.vna2_type}_vna2.png'
                                 fpath = os.path.join(image_path, image_name)
-                                result = vna_png(self.vna_con1, fpath, self.known_devices[self.metadata.vna2_type])
+                                result = vna_png(self.vna_con2, fpath, self.known_devices[self.metadata.vna2_type])
                                 image_info['vna2'] = fpath
                                 if not result:
                                     retry = True
@@ -208,8 +208,9 @@ class AppThread(Thread):
                                 except:
                                     logging.exception('Error closing connection.')
                                 self.vna_con2 = None
-                        for item in self.image_queue_pool:
-                            item.put(image_info)
+                        if self.vna_con1 or self.vna_con2:
+                            for item in self.image_queue_pool:
+                                item.put(image_info)
                         if not retry:
                             # Sleep until it's time to collect the next data point.
                             start_time = t
@@ -322,7 +323,6 @@ class AppThread(Thread):
             # Read until the newline character, decode to utf-8,
             # and remove the ending newline character.
             data = self.con.readline().decode('utf-8').rstrip()
-            print(data)
             # Get temperatures from the string.
             temp1, temp2 = [float(x) for x in data.split(',')]
             # Assign values to dictionary.

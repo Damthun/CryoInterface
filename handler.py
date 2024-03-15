@@ -523,7 +523,6 @@ def build_response_handler(app_thread: AppThread):
 
             for index, item in enumerate(optional_metatags):
                 check = metadata.get(item)
-                print(check)
                 if check != "":
                     optional_metatags[index] = check
                 elif check == "":
@@ -627,7 +626,6 @@ def build_response_handler(app_thread: AppThread):
             try:
                 content = self.rfile.read(length).decode('utf-8')
                 data = json.loads(content)
-                print(data)
                 photo_url = data.get('photoUrl')
             except Exception as e:
                 self.send_json_response(f'Error processing request body: {str(e)}', status=HTTPStatus.BAD_REQUEST)
